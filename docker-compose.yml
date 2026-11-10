@@ -23,3 +23,10 @@ services:
 
 volumes:
   qdrant_data:
+
+# Evita que Docker asigne 172.18.0.0/16, utilizada por la red universitaria.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 192.168.240.0/24

@@ -13,6 +13,8 @@ El DNS interno debe resolver `cia.indoamerica.edu.ec` a la IP interna del servid
 
 Los puertos de la aplicación se mantienen vinculados a `127.0.0.1`; Qdrant no publica puertos. Nginx conserva el certificado y los demás servicios existentes del dominio.
 
+La red de Compose usa `192.168.240.0/24` para evitar el rango universitario `172.18.0.0/16`. Antes de desplegar en otro servidor, comprobar con `ip route` que esa subred también esté libre allí.
+
 Comprobación local del dominio mientras se configura DNS:
 
 ```bash
