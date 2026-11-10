@@ -161,13 +161,15 @@
         <button id="inicio">← Volver al inicio</button></div>
       <div id="err4"></div>
       <div class="hint" id="finnota"></div>
-      <div class="hidden" id="otrobox" style="margin-top:14px"><a class="btn pri" href="/" id="otro">Cargar otro curso →</a></div>
+      <div class="hidden" id="otrobox" style="margin-top:14px"><a class="btn pri" href="./" id="otro">Cargar otro curso →</a></div>
     </div>
   </section>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+const appBase = new URL('./', location.href);
+const appUrl = path => new URL(path.replace(/^\/+/, ''), appBase).href;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let archivo = null, R = null, G = null, cur = 1;
 const URLRE = /^\s*https:\/\/([^/\s]+\.instructure\.com)\/courses\/(\d+)(?:[/?#]\S*)?\s*$/i;
@@ -201,7 +203,7 @@ function valida() {
   $('falta').textContent = f.length ? 'Falta: ' + f.join(', ') : 'Listo para analizar';
 }
 async function api(path, opts) {
-  const r = await fetch(path, opts);
+  const r = await fetch(appUrl(path), opts);
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : `Error ${r.status}`);
   return j;
@@ -307,7 +309,7 @@ function pintar4(res) {
   const pendientes = Object.values(G.control).flat().filter(i => !i.ok).length;
   if (pendientes) $('conftxt').innerHTML += ` He revisado los ${pendientes} avisos de la lista de control y decido publicar de todos modos.`;
   $('pub').disabled = !$('conf').checked || !publicables().length;
-  $('dl').href = '/api/descargar/' + encodeURIComponent(R.sid);
+  $('dl').href = appUrl('/api/descargar/' + encodeURIComponent(R.sid));
 }
 let RES = {};
 $('conf').onchange = () => $('pub').disabled = !$('conf').checked || !publicables().length;
@@ -327,7 +329,7 @@ async function restaurar(n, btn) {
 let descargado = false;
 $('dl').addEventListener('click', () => descargado = true);
 $('fin').onclick = async () => {
-  await fetch('/api/terminar/' + encodeURIComponent(R.sid), {method: 'POST'});
+  await fetch(appUrl('/api/terminar/' + encodeURIComponent(R.sid)), {method: 'POST'});
   $('finnota').innerHTML = 'Datos borrados del servidor. Te recomendamos eliminar el token en Canvas (Cuenta → Configuraciones → Integraciones aprobadas → 🗑).';
   ['pub', 'fin'].forEach(id => $(id).disabled = true); $('dl').classList.add('hidden');
   document.querySelectorAll('[data-rest]').forEach(b => b.disabled = true);
@@ -335,12 +337,12 @@ $('fin').onclick = async () => {
 };
 $('inicio').onclick = async () => {
   if (!descargado && !confirm('Si vuelves al inicio se borran los datos de esta sesión: ya no podrás descargar el ZIP ni usar "Restaurar anterior". ¿Continuar?')) return;
-  await fetch('/api/terminar/' + encodeURIComponent(R.sid), {method: 'POST'}).catch(() => {});
-  location.href = '/';
+  await fetch(appUrl('/api/terminar/' + encodeURIComponent(R.sid)), {method: 'POST'}).catch(() => {});
+  location.href = appUrl('');
 };
 
 // ---------- IA de la universidad ----------
-fetch('/api/salud').then(r => r.json()).then(s => {
+fetch(appUrl('/api/salud')).then(r => r.json()).then(s => {
   const ok = s.qwen === 'ok' && s.ia_activa;
   $('usaria').disabled = !ok; $('usaria').checked = ok;
   $('ianota').textContent = ok ? `Disponible (${s.modelo}). Tarda 1–2 minutos y no detiene tu trabajo: mientras tanto puedes revisar y generar la vista previa.`

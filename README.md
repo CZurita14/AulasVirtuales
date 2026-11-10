@@ -17,6 +17,7 @@ La aplicación permite revisar las páginas antes de publicar, conserva referenc
 ## Documentación
 
 - [Uso, arquitectura y configuración](sistema/README.md)
+- [Despliegue en el dominio institucional](deploy/README.md)
 - [Reglas de transformación del sílabo](PROMPT_MAESTRO_Silabo_a_Canvas.md)
 - [Pruebas del HTML](tests/README.md)
 
