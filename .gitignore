@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.playwright-mcp/
+.superpowers/
+reportes_ia/
+*.zip
+.env
+.env.*
+!.env.example
+*.pdf
+*.docx
+*.sqlite
+*.sqlite3
+tmp/
+output/

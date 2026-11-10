@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sílabo → Aula virtual</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480;--ok:#1e7b4f;--warn:#a6480c;--bad:#b42318}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o)}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  .steps{display:flex;gap:8px;margin-bottom:22px}
+  .step{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;color:var(--mut);font-size:14px}
+  .step b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--line);color:var(--mut);flex:none}
+  .step.on{border-color:var(--m);color:var(--m);font-weight:600} .step.on b{background:var(--m);color:#fff} .step.done b{background:var(--ok);color:#fff}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--m2)} .card .sub{margin:0 0 16px;color:var(--mut);font-size:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  label{display:block;font-weight:600;font-size:14px;margin:0 0 6px;color:var(--m2)}
+  .hint{font-size:12.5px;color:var(--mut);margin-top:6px}
+  input[type=text],input[type=password],textarea,select{width:100%;border:1px solid #cfc6dd;border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;background:#fff}
+  .drop{border:2px dashed #cfc6dd;border-radius:10px;padding:22px;text-align:center;color:var(--mut);cursor:pointer;background:#FCFAFE}
+  .drop.over{border-color:var(--m);background:#f1ecf8} .drop.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:#f1faf5}
+  .chip{display:inline-flex;gap:6px;align-items:center;background:#f1ecf8;color:var(--m);border-radius:20px;padding:4px 10px;font-size:12.5px;margin:4px 4px 0 0}
+  .chip.ok{background:#e7f5ee;color:var(--ok)} .chip.w{background:#fdf0e7;color:var(--warn)} .chip.bad{background:#fde8e6;color:var(--bad)}
+  .btns{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  button,.btn{font:inherit;font-size:14px;border-radius:8px;padding:10px 18px;cursor:pointer;border:1px solid var(--m);background:#fff;color:var(--m);text-decoration:none;display:inline-block}
+  button.pri,.btn.pri{background:var(--m);color:#fff} button.pri:hover{background:var(--m2)} button:disabled{opacity:.45;cursor:not-allowed}
+  button.sm{padding:4px 10px;font-size:12px}
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.t th{background:#F7F3FB;color:var(--m);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .warn{border-left:4px solid var(--o);background:#fff8f2;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13.5px} .warn b{color:var(--warn)}
+  .warn.grave{border-left-color:var(--bad);background:#fff4f3} .warn.grave b{color:var(--bad)}
+  .info{border-left:4px solid var(--m);background:#f7f3fb;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13.5px}
+  .err{border-left:4px solid var(--bad);background:#fff4f3;color:var(--bad);padding:10px 12px;border-radius:6px;margin:12px 0;font-size:14px}
+  .prop{border:1px dashed var(--o);background:#fffdf3;border-radius:8px;padding:10px;margin-bottom:10px}
+  .prop .tag{font-size:11px;font-weight:700;color:var(--warn);letter-spacing:.5px}
+  .prop textarea{min-height:80px;font-family:inherit;font-size:13.5px;border-color:#f0d9c4}
+  .tabs{display:flex;gap:6px;border-bottom:2px solid var(--line)}
+  .tab{padding:9px 16px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:#f1ecf8;color:var(--m);cursor:pointer;font-size:14px}
+  .tab.on{background:#fff;font-weight:600;border-color:var(--m);position:relative;top:2px} .tab .x{color:var(--bad)}
+  .preview{display:grid;grid-template-columns:1fr 300px;gap:16px}
+  .frame{border:1px solid var(--line);border-top:none;background:#fff;border-radius:0 0 10px 10px;padding:10px}
+  .frame .bar{font-size:12px;color:var(--mut);padding:4px 6px 10px;border-bottom:1px solid var(--line);margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
+  iframe{width:100%;height:660px;border:0;background:#fff}
+  .check{padding:0;margin:0} .check li{list-style:none;margin:0 0 7px;font-size:13.5px} .check .d{display:block;font-size:12px;color:var(--bad);margin-left:18px} .check .d.a{color:var(--warn)}
+  .ok{color:var(--ok)} .no{color:var(--bad)} .av{color:var(--warn)}
+  .confirm{display:flex;gap:10px;align-items:flex-start;background:#fff8f2;border:1px solid #f3d3b8;border-radius:8px;padding:12px;font-size:14px;margin:14px 0}
+  .confirm input{margin-top:3px;width:18px;height:18px}
+  .steps-help{font-size:13px;line-height:1.6;margin:6px 0 0;padding-left:18px;color:var(--mut)}
+  .hidden{display:none}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:g .7s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes g{to{transform:rotate(360deg)}}
+  @media(max-width:860px){.grid2,.preview{grid-template-columns:1fr}.steps{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header><h1>Sílabo → Aula virtual</h1><small>Carga los "Momentos" de tu sílabo en tu curso de Canvas</small></header>
+
+<div class="wrap">
+  <div class="steps">
+    <div class="step on"><b>1</b>Tus datos</div><div class="step"><b>2</b>Revisión</div>
+    <div class="step"><b>3</b>Vista previa</div><div class="step"><b>4</b>Publicar</div>
+  </div>
+
+  <!-- PASO 1 -->
+  <section id="p1">
+    <div class="card">
+      <h2>1. Tus datos</h2>
+      <p class="sub">Con tu sílabo, la dirección de tu curso y tu token, cargamos los momentos en tu aula. Nada se publica sin que lo apruebes en el paso 4.</p>
+      <div class="grid2">
+        <div>
+          <label for="pdf">Sílabo (PDF)</label>
+          <div class="drop" id="drop" tabindex="0">📄 Arrastra tu sílabo aquí o haz clic para elegirlo</div>
+          <input type="file" id="pdf" accept="application/pdf,.pdf" class="hidden">
+          <div class="hint">El PDF que genera el sistema académico (secciones I a VII).</div>
+
+          <label for="url" style="margin-top:18px">URL de tu curso en Canvas</label>
+          <input type="text" id="url" placeholder="https://indoamerica.instructure.com/courses/12345" autocomplete="off">
+          <div class="hint">Entra a tu curso y copia la barra de direcciones.</div>
+          <div id="urlinfo"></div>
+        </div>
+        <div>
+          <label for="token">Token de acceso de Canvas</label>
+          <input type="password" id="token" placeholder="Pega aquí tu token" autocomplete="off" spellcheck="false">
+          <ol class="steps-help">
+            <li>En Canvas: <b>Cuenta → Configuraciones</b>.</li>
+            <li>En "Integraciones aprobadas" pulsa <b>+ Nuevo token de acceso</b>.</li>
+            <li>Propósito: <i>Carga de momentos</i>; fecha de expiración: <b>mañana</b>.</li>
+            <li>Copia el token y pégalo aquí (Canvas solo lo muestra una vez).</li>
+          </ol>
+          <div class="info">🔒 El token solo se usa durante esta sesión para leer tu curso y, cuando lo apruebes, actualizar las páginas Momento. No se guarda. Al terminar puedes eliminarlo en Canvas.</div>
+        </div>
+      </div>
+      <label class="confirm" id="iabox" style="background:#f7f3fb;border-color:var(--line)"><input type="checkbox" id="usaria" disabled>
+        <span><b>Revisar también con la IA de la universidad (Qwen)</b><br><span class="hint" id="ianota">Comprobando si el servidor de IA está disponible…</span></span></label>
+      <div id="err1"></div>
+    </div>
+    <div class="btns"><span class="hint" id="falta">Falta: sílabo, URL del curso y token</span><button class="pri" id="b1" disabled>Analizar sílabo y curso →</button></div>
+  </section>
+
+  <!-- PASO 2 -->
+  <section id="p2" class="hidden">
+    <div class="card">
+      <h2>2. Revisión</h2>
+      <p class="sub">Esto es lo que leímos de tu sílabo y de tu curso. Revisa las advertencias y los textos marcados como <b style="color:var(--warn)">PROPUESTO</b>.</p>
+      <div style="display:grid;gap:18px"><table class="t" id="ficha"></table><table class="t" id="tmom"></table></div>
+    </div>
+    <div class="card hidden" id="iacard"><h2>Segunda lectura (IA) <span class="chip" id="iaestado"></span></h2>
+      <p class="sub">La IA de la universidad lee el mismo sílabo por su cuenta y comparamos. Lo que se publica sale de la lectura por reglas: aquí solo ves dónde difieren.</p>
+      <div id="iabarra" style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div id="iaprog" style="height:100%;width:0;background:var(--m);transition:width .4s"></div></div>
+      <div id="iares" style="margin-top:12px"></div></div>
+    <div class="card"><h2>Advertencias <span class="chip w" id="nadv">0</span></h2>
+      <p class="sub">No corregimos tu sílabo: te mostramos lo que conviene revisar. Las rojas son importantes.</p><div id="adv"></div></div>
+    <div class="card">
+      <h2>Textos propuestos <span class="chip w">el sílabo no los trae</span></h2>
+      <p class="sub">Edítalos si quieres. En la página final aparecen sin marcas.</p>
+      <div class="grid2">
+        <div><label>Propósito del momento</label><div id="props"></div><div class="hint">Sugerencia: una oración que empiece con verbo en infinitivo.</div></div>
+        <div>
+          <label>Bibliografía complementaria por momento</label>
+          <table class="t" id="bibt"></table>
+          <div class="hint" id="bibnota"></div>
+          <div id="sinurl"></div>
+          <label style="margin-top:18px">Del sílabo, sin lugar en la página Momento</label>
+          <div class="info">Recursos para el aprendizaje y política de IA de cada momento: van en <b>informe.html</b> (descarga del paso 4).</div>
+        </div>
+      </div>
+    </div>
+    <div class="btns"><button id="v1">← Volver</button><button class="pri" id="b2">Generar vista previa →</button></div>
+    <div id="err2"></div>
+  </section>
+
+  <!-- PASO 3 -->
+  <section id="p3" class="hidden">
+    <div class="card" style="padding-bottom:12px">
+      <h2>3. Vista previa</h2>
+      <p class="sub">Así se verá cada página en Canvas. A la derecha, la lista de control que corre sobre cada HTML.</p>
+      <div class="tabs" id="tabs"></div>
+      <div class="preview">
+        <div class="frame"><div class="bar"><span id="bar"></span><button id="copiar" class="sm">Copiar HTML</button></div><iframe id="frame" title="vista previa" sandbox=""></iframe></div>
+        <div><div class="card" style="padding:16px"><h2 style="font-size:15px">Lista de control <span class="chip" id="score"></span></h2><ul class="check" id="check"></ul></div></div>
+      </div>
+    </div>
+    <div class="btns"><button id="v2">← Editar textos</button><button class="pri" id="b3">Continuar a publicar →</button></div>
+  </section>
+
+  <!-- PASO 4 -->
+  <section id="p4" class="hidden">
+    <div class="card">
+      <h2>4. Publicar en Canvas</h2>
+      <p class="sub">Se actualiza solo el contenido de cada página Momento. Antes de cambiarla guardamos una copia de lo que tenía, y después verificamos que quedó bien.</p>
+      <table class="t" id="tpub"></table>
+      <label class="confirm"><input type="checkbox" id="conf"><span id="conftxt"></span></label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="pri" id="pub" disabled>Publicar en Canvas</button>
+        <a class="btn" id="dl">⬇ Descargar ZIP (HTML + informe + respaldo)</a>
+        <button id="fin">Terminar y borrar datos</button>
+        <button id="inicio">← Volver al inicio</button></div>
+      <div id="err4"></div>
+      <div class="hint" id="finnota"></div>
+      <div class="hidden" id="otrobox" style="margin-top:14px"><a class="btn pri" href="/" id="otro">Cargar otro curso →</a></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let archivo = null, R = null, G = null, cur = 1;
+const URLRE = /^\s*https:\/\/([^/\s]+\.instructure\.com)\/courses\/(\d+)(?:[/?#]\S*)?\s*$/i;
+
+// ---------- Paso 1 ----------
+const drop = $('drop');
+drop.onclick = () => $('pdf').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') $('pdf').click(); };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); elegir(e.dataTransfer.files[0]); };
+$('pdf').onchange = e => elegir(e.target.files[0]);
+function elegir(f) {
+  if (!f) return;
+  if (!/\.pdf$/i.test(f.name)) { drop.className = 'drop'; drop.innerHTML = '⚠ Ese archivo no es un PDF. Elige el sílabo en PDF.'; archivo = null; valida(); return; }
+  archivo = f; drop.className = 'drop ok';
+  drop.innerHTML = `✔ ${esc(f.name)}<br><span style="font-size:12px">${(f.size/1024).toFixed(0)} KB · haz clic para cambiarlo</span>`;
+  valida();
+}
+$('url').oninput = () => {
+  const v = $('url').value.trim(), m = v.match(URLRE);
+  $('urlinfo').innerHTML = !v ? '' : m ? `<span class="chip ok">✔ Curso ${esc(m[2])}</span><span class="chip ok">${esc(m[1])}</span>`
+    : '<span class="chip w">Debe verse así: https://indoamerica.instructure.com/courses/12345</span>';
+  valida();
+};
+$('token').oninput = valida;
+function valida() {
+  const u = URLRE.test($('url').value), t = $('token').value.trim().length >= 20;
+  $('b1').disabled = !(archivo && u && t);
+  const f = [!archivo && 'sílabo', !u && 'URL del curso', !t && 'token'].filter(Boolean);
+  $('falta').textContent = f.length ? 'Falta: ' + f.join(', ') : 'Listo para analizar';
+}
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : `Error ${r.status}`);
+  return j;
+}
+const post = (path, body) => api(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+function cargando(btn, txt) { btn.disabled = true; btn.dataset.t = btn.innerHTML; btn.innerHTML = `<span class="spin"></span>${txt}`; }
+function listo(btn) { btn.disabled = false; btn.innerHTML = btn.dataset.t; }
+
+$('b1').onclick = async () => {
+  $('err1').innerHTML = '';
+  const fd = new FormData(); fd.append('pdf', archivo); fd.append('url', $('url').value.trim()); fd.append('token', $('token').value.trim());
+  fd.append('usar_ia', $('usaria').checked ? '1' : '0');
+  cargando($('b1'), 'Leyendo el sílabo y tu curso…');
+  try { R = await api('/api/analizar', {method: 'POST', body: fd}); $('token').value = ''; pintar2(); ir(2); seguirIA(R.ia); }
+  catch (e) { $('err1').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  finally { listo($('b1')); valida(); }
+};
+
+// ---------- Paso 2 ----------
+const corto = d => d ? d.slice(0, 5) : '?';
+const iso = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d.split('-').reverse().join('/') : (d || '');
+function pintar2() {
+  const f = R.ficha, c = R.curso;
+  $('ficha').innerHTML = `<tr><th colspan="2">Ficha</th></tr>
+    <tr><td>Sílabo</td><td><b>${esc(f.proyecto)}</b> (${esc(f.codigo)}) · ${esc(f.periodo)} · ${esc(iso(f.inicio))} – ${esc(iso(f.fin))} · ${esc(f.nivel)} · ${esc(f.modalidad)}</td></tr>
+    <tr><td>Docente</td><td>${esc(f.docente)}</td></tr>
+    <tr><td>Curso Canvas</td><td><b>${esc(c.nombre)}</b> <span class="chip ok">ID ${esc(c.id)}</span> <a href="${esc(c.url)}" target="_blank" rel="noopener">abrir</a></td></tr>
+    <tr><td>Botón "Inicio del curso"</td><td><code>${esc(c.url_inicio)}</code></td></tr>`;
+  let tot = [0, 0, 0];
+  $('tmom').innerHTML = '<tr><th>Momento</th><th>Fechas</th><th>RA</th><th>Ses.</th><th>Horas D/PE/A</th><th>Página en Canvas</th></tr>' +
+    R.momentos.map(m => { m.totales.forEach((x, i) => tot[i] += parseFloat(x) || 0);
+      const d = R.destinos[m.n];
+      const pag = d ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.titulo)}</a><br><span class="hint">por ${esc(d.fuente)} · plantilla ${esc(d.plantilla)}</span>`
+        : '<span class="chip bad">No encontrada: no se publicará</span>';
+      return `<tr><td><b>${m.n}</b> · ${esc(m.titulo)}</td><td style="white-space:nowrap">${corto(m.inicio)} – ${corto(m.fin)}</td><td>${esc(m.ra.join(', '))}</td><td>${m.sesiones}</td><td style="white-space:nowrap">${m.totales.map(x => parseFloat(x)).join(' / ')}</td><td>${pag}</td></tr>`; }).join('') +
+    `<tr><td colspan="4"><b>Total</b> (Presentación: ${esc(f.horas)} h)</td><td><b>${tot.join(' / ')}</b></td><td></td></tr>`;
+  const graves = R.advertencias.filter(a => a.grave).length;
+  $('nadv').textContent = R.advertencias.length; $('nadv').className = 'chip ' + (graves ? 'bad' : 'w');
+  $('adv').innerHTML = R.advertencias.length ? R.advertencias.map(a => `<div class="warn ${a.grave ? 'grave' : ''}"><b>${esc(a.tipo)}:</b> ${esc(a.texto)}</div>`).join('')
+    : '<div class="info">Sin advertencias. ✔</div>';
+  $('props').innerHTML = R.momentos.map(m => m.proposito
+    ? `<div class="prop"><div class="tag">PROPUESTO · MOMENTO ${m.n}</div><textarea data-n="${m.n}">${esc(R.propositos[m.n])}</textarea></div>`
+    : `<div class="info">Momento ${m.n}: tu página no tiene "Propósito del momento"; no se agrega.</div>`).join('');
+  $('bibt').innerHTML = '<tr><th>Momento</th><th>Obras</th></tr>' + R.momentos.map(m => {
+    const sel = R.complementaria[m.n] || [];
+    return `<tr><td>${m.n}</td><td>` + R.obras.map(o =>
+      `<label style="display:flex;gap:8px;align-items:start;font-weight:normal"><input type="checkbox" data-n="${m.n}" value="${esc(o.clave)}" ${sel.includes(o.clave) ? 'checked' : ''}><span>${esc(o.texto)}</span></label>`).join('') + '</td></tr>'; }).join('');
+  $('bibnota').textContent = `Se incluyen todas las obras del sílabo en cada momento: ${R.basicas} básicas y ${R.obras.length} complementarias. Puedes desmarcar las complementarias que no correspondan.`;
+  $('sinurl').innerHTML = !R.sin_url.length ? '' : `<label style="margin-top:18px">Obras sin enlace en el sílabo <span class="chip w">${R.sin_url.length}</span></label>
+    <div class="hint" style="margin-bottom:6px">Si tienes el enlace (biblioteca virtual, e-Libro, DOI), pégalo y se mostrará el botón "Acceder". Si lo dejas vacío, la obra se cita sin enlace.</div>` +
+    R.sin_url.map(o => `<div class="prop"><div class="tag">PROPUESTO · ${o.tipo === 'basica' ? 'BÁSICA' : 'COMPLEMENTARIA'}</div>
+      <div style="font-size:13px;margin:4px 0 6px">${esc(o.texto)}</div>
+      <input type="text" data-clave="${esc(o.clave)}" placeholder="https://… (opcional)" value="${esc(o.url_doc)}"></div>`).join('');
+}
+$('v1').onclick = () => ir(1);
+$('b2').onclick = async () => {
+  const propositos = {}, complementaria = {};
+  document.querySelectorAll('#props textarea').forEach(t => propositos[t.dataset.n] = t.value);
+  R.momentos.forEach(m => complementaria[m.n] = []);
+  document.querySelectorAll('#bibt input:checked').forEach(s => complementaria[s.dataset.n].push(s.value));
+  const urls = {}; document.querySelectorAll('#sinurl input').forEach(i => urls[i.dataset.clave] = i.value.trim());
+  const malas = Object.values(urls).filter(u => u && !/^https?:\/\/\S+\.\S+$/.test(u));
+  if (malas.length) { $('err2').innerHTML = `<div class="err">Enlace no válido: ${esc(malas[0])}. Debe empezar con https://</div>`; return; }
+  cargando($('b2'), 'Generando…'); $('err2').innerHTML = '';
+  try { G = await post('/api/generar', {sid: R.sid, propositos, complementaria, urls}); ir(3); ver(1); }
+  catch (e) { $('err2').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  finally { listo($('b2')); }
+};
+
+// ---------- Paso 3 ----------
+const fallos = n => (G.control[n] || []).filter(i => !i.ok && i.bloquea).length;
+function ver(n) {
+  cur = n;
+  $('tabs').innerHTML = R.momentos.map(m => `<div class="tab ${m.n === n ? 'on' : ''}" data-n="${m.n}">Momento ${m.n}${fallos(m.n) ? ' <span class="x">✘</span>' : ''}</div>`).join('');
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => ver(+t.dataset.n));
+  $('frame').srcdoc = '<!DOCTYPE html><meta charset="utf-8"><body style="margin:0;padding:12px;background:#fff">' + (G.paginas[n] || '') + '</body>';
+  const m = R.momentos.find(x => x.n === n), items = G.control[n] || [], d = R.destinos[n];
+  $('bar').textContent = `${m.sesiones} sesiones · ${m.indicadores} indicadores · ` + (d ? `se publicará en "${d.titulo}"` : 'sin página destino en el curso');
+  const ok = items.filter(i => i.ok).length;
+  $('score').textContent = `${ok}/${items.length}`; $('score').className = 'chip ' + (fallos(n) ? 'bad' : 'ok');
+  $('check').innerHTML = items.map(i => `<li><span class="${i.ok ? 'ok' : i.bloquea ? 'no' : 'av'}">${i.ok ? '✔' : i.bloquea ? '✘' : '!'}</span> ${esc(i.nombre)}${i.ok ? '' : `<span class="d ${i.bloquea ? '' : 'a'}">${esc(i.detalle)}</span>`}</li>`).join('');
+  $('b3').disabled = !G.listo;
+  const avisos = Object.values(G.control).flat().filter(i => !i.ok).length;
+  $('b3').textContent = !G.listo ? 'Falta generar una vista previa completa' : avisos ? 'Continuar a publicar (con avisos) →' : 'Todo en verde · Continuar a publicar →';
+}
+$('copiar').onclick = async () => { await navigator.clipboard.writeText(G.paginas[cur]); $('copiar').textContent = '✔ Copiado'; setTimeout(() => $('copiar').textContent = 'Copiar HTML', 1500); };
+$('v2').onclick = () => ir(2);
+$('b3').onclick = () => { pintar4({}); ir(4); };
+
+// ---------- Paso 4 ----------
+const publicables = () => R.momentos.filter(m => R.destinos[m.n]).map(m => m.n);
+function pintar4(res) {
+  $('tpub').innerHTML = '<tr><th>Momento</th><th>Página de Canvas</th><th>Estado</th><th></th></tr>' + R.momentos.map(m => {
+    const d = R.destinos[m.n], r = res[m.n];
+    const estado = !d ? '<span class="chip bad">Sin página en el curso</span>'
+      : !r ? '<span class="chip">Lista para publicar</span>'
+      : r.restaurada ? `<span class="chip w">${esc(r.mensaje)}</span>`
+      : `<span class="chip ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✔ ' : '✘ '}${esc(r.mensaje)}</span>`;
+    const acc = r && !r.restaurada && d ? `<button class="sm" data-rest="${m.n}">Restaurar anterior</button>` : '';
+    return `<tr><td>Momento ${m.n}</td><td>${d ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.titulo)}</a>` : '—'}</td><td>${estado}</td><td>${acc}</td></tr>`; }).join('');
+  document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => restaurar(+b.dataset.rest, b));
+  $('conftxt').innerHTML = `Confirmo que el curso <b>${esc(R.curso.nombre)}</b> (ID ${esc(R.curso.id)}) es el correcto y autorizo reemplazar el contenido de ${publicables().length} página(s) Momento.`;
+  const pendientes = Object.values(G.control).flat().filter(i => !i.ok).length;
+  if (pendientes) $('conftxt').innerHTML += ` He revisado los ${pendientes} avisos de la lista de control y decido publicar de todos modos.`;
+  $('pub').disabled = !$('conf').checked || !publicables().length;
+  $('dl').href = '/api/descargar/' + encodeURIComponent(R.sid);
+}
+let RES = {};
+$('conf').onchange = () => $('pub').disabled = !$('conf').checked || !publicables().length;
+$('pub').onclick = async () => {
+  cargando($('pub'), 'Publicando…'); $('err4').innerHTML = '';
+  try { const j = await post('/api/publicar', {sid: R.sid, momentos: publicables(), confirmado: $('conf').checked});
+    RES = Object.assign(RES, j.resultados); pintar4(RES); }
+  catch (e) { $('err4').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  finally { listo($('pub')); $('pub').textContent = 'Publicar de nuevo'; $('pub').disabled = !$('conf').checked; }
+};
+async function restaurar(n, btn) {
+  if (!confirm(`¿Volver la página del Momento ${n} a como estaba antes de publicar?`)) return;
+  cargando(btn, '…');
+  try { RES[n] = await post('/api/restaurar', {sid: R.sid, momento: n}); pintar4(RES); }
+  catch (e) { $('err4').innerHTML = `<div class="err">${esc(e.message)}</div>`; listo(btn); }
+}
+let descargado = false;
+$('dl').addEventListener('click', () => descargado = true);
+$('fin').onclick = async () => {
+  await fetch('/api/terminar/' + encodeURIComponent(R.sid), {method: 'POST'});
+  $('finnota').innerHTML = 'Datos borrados del servidor. Te recomendamos eliminar el token en Canvas (Cuenta → Configuraciones → Integraciones aprobadas → 🗑).';
+  ['pub', 'fin'].forEach(id => $(id).disabled = true); $('dl').classList.add('hidden');
+  document.querySelectorAll('[data-rest]').forEach(b => b.disabled = true);
+  $('otrobox').classList.remove('hidden');
+};
+$('inicio').onclick = async () => {
+  if (!descargado && !confirm('Si vuelves al inicio se borran los datos de esta sesión: ya no podrás descargar el ZIP ni usar "Restaurar anterior". ¿Continuar?')) return;
+  await fetch('/api/terminar/' + encodeURIComponent(R.sid), {method: 'POST'}).catch(() => {});
+  location.href = '/';
+};
+
+// ---------- IA de la universidad ----------
+fetch('/api/salud').then(r => r.json()).then(s => {
+  const ok = s.qwen === 'ok' && s.ia_activa;
+  $('usaria').disabled = !ok; $('usaria').checked = ok;
+  $('ianota').textContent = ok ? `Disponible (${s.modelo}). Tarda 1–2 minutos y no detiene tu trabajo: mientras tanto puedes revisar y generar la vista previa.`
+    : 'La IA de la universidad no está disponible ahora: se usará solo la lectura por reglas (funciona igual).';
+}).catch(() => { $('ianota').textContent = 'No se pudo consultar el servidor de IA: se usará solo la lectura por reglas.'; });
+
+const IA_TXT = {pendiente: 'en cola', en_curso: 'leyendo…', listo: 'terminada', error: 'no se pudo completar', no_disponible: 'no disponible', desactivada: 'desactivada'};
+let iaTimer = null;
+function seguirIA(e) {
+  clearTimeout(iaTimer);
+  if (!e || e.estado === 'desactivada') { $('iacard').classList.add('hidden'); return; }
+  $('iacard').classList.remove('hidden');
+  pintarIA(e);
+  if (e.estado === 'pendiente' || e.estado === 'en_curso')
+    iaTimer = setTimeout(async () => { try { seguirIA(await api('/api/ia/' + encodeURIComponent(R.sid))); } catch (x) { pintarIA({estado: 'error', error: x.message}); } }, 3000);
+}
+function pintarIA(e) {
+  const fin = !['pendiente', 'en_curso'].includes(e.estado);
+  $('iaestado').textContent = IA_TXT[e.estado] || e.estado;
+  $('iaestado').className = 'chip ' + (e.estado === 'listo' ? ((e.resumen && e.resumen.altas) ? 'bad' : 'ok') : fin ? 'w' : '');
+  $('iaprog').style.width = Math.round(100 * (fin ? 1 : (e.avance || 0.03))) + '%';
+  $('iabarra').classList.toggle('hidden', fin);
+  if (!fin) { $('iares').innerHTML = `<span class="hint">Avance: ${Math.round(100 * (e.avance || 0))} % · puedes seguir trabajando.</span>`; return; }
+  if (e.estado !== 'listo') { $('iares').innerHTML = `<div class="info">${esc(e.error || 'La revisión con IA no está disponible.')} La lectura por reglas no se ve afectada.</div>`; return; }
+  let h = '';
+  const d = e.discrepancias || [];
+  h += d.length ? `<p><b>${d.length}</b> diferencia(s): <b style="color:var(--bad)">${e.resumen.altas} importante(s)</b>, ${e.resumen.medias} de texto. Revisa esos datos contra tu sílabo.</p>
+      <table class="t"><tr><th>Dato</th><th>Lectura por reglas (se publica)</th><th>Lectura de la IA</th></tr>` +
+      d.slice(0, 40).map(x => `<tr><td style="white-space:nowrap"><span class="${x.gravedad === 'alta' ? 'no' : 'av'}">●</span> ${esc(x.campo)}</td><td>${esc(x.reglas.slice(0, 160))}</td><td>${x.tipo === 'ia_sin_dato' ? '<i>(sin dato)</i>' : esc(x.ia.slice(0, 160))}</td></tr>`).join('') + '</table>'
+    : '<div class="info">✔ La IA leyó lo mismo que las reglas: ninguna diferencia.</div>';
+  if ((e.bloques_ia || []).length) h += `<div class="warn grave"><b>Leído por IA, revisar:</b> ${esc(e.bloques_ia.join(', '))}. Estos bloques no se pudieron leer por reglas. Genera la vista previa de nuevo y revísalos antes de publicar.</div>`;
+  const props = e.propositos || {};
+  if (Object.keys(props).length) {
+    h += '<p style="margin-top:12px"><b>Propósitos redactados por la IA</b> (PROPUESTO): puedes usarlos en lugar de los sugeridos.</p>' +
+      Object.entries(props).map(([n, p]) => `<div class="prop"><div class="tag">IA · MOMENTO ${esc(n)}</div><div style="font-size:13.5px;margin:4px 0">${esc(p)}</div>
+        <button class="sm" data-usarprop="${esc(n)}">Usar esta redacción</button></div>`).join('');
+  }
+  $('iares').innerHTML = h;
+  document.querySelectorAll('[data-usarprop]').forEach(b => b.onclick = () => {
+    const t = document.querySelector(`#props textarea[data-n="${b.dataset.usarprop}"]`);
+    if (t) { t.value = props[b.dataset.usarprop]; b.textContent = '✔ Aplicado'; b.disabled = true; }
+  });
+}
+
+function ir(n) {
+  [1, 2, 3, 4].forEach(i => $('p' + i).classList.toggle('hidden', i !== n));
+  document.querySelectorAll('.step').forEach((s, i) => s.className = 'step' + (i + 1 === n ? ' on' : i + 1 < n ? ' done' : ''));
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Sílabo → Aula virtual + BD vectorial. El modelo Qwen corre en el servidor de la UTI (QWEN_URL).
+#   docker compose up -d --build      → http://localhost:8770
+services:
+  app:
+    build: ./sistema
+    ports:
+      # Solo este equipo. El token de Canvas viaja en el formulario: para usarlo en red, poner delante
+      # un proxy con HTTPS (Caddy/Nginx) y publicar solo el proxy, nunca este puerto en claro.
+      - "127.0.0.1:8770:8770"
+    env_file: .env
+    environment:
+      QDRANT_URL: http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+    # sin "ports": Qdrant solo es accesible para el sistema dentro de la red de Docker
+
+volumes:
+  qdrant_data:
