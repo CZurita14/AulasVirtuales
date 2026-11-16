@@ -313,3 +313,68 @@
 - Historial: por el túnel queda **cerrado** (estado `requiere_clave`, API 403), así el compañero no ve el historial del usuario;
   en este equipo sigue abierto (57 eventos). Lo que el compañero cargue sí queda registrado en el historial de este equipo.
 - Para cerrar el puente: `docker stop silabos-tunel`. Al reiniciarlo cambia la URL.
+
+### 2026-11-16 · Cambios subidos a GitHub (https://github.com/CZurita14/AulasVirtuales, **público**)
+- El repo de GitHub se creó aparte el 10/11 (sin historia en común con este repo local) y **no publica PDF de docentes**.
+  Para no reescribir lo que hay allí ni publicar los 2 PDF que sí están en la historia local, se subió **un commit de
+  sincronización** encima de `origin/main`: commit `18b8d4b` (avance rápido desde `3e09732`, sin forzar). Contiene el árbol de
+  `main` local **sin** `B26_Software_Programacion Estructurada.pdf`, `silabos_prueba/*.pdf` ni `.claude/`, y el README raíz con
+  la sección "Qué incluye" (Sílabos, Guías prácticas, Historial).
+- Antes se quitaron de `progress.md` las URL del túnel (una estaba activa): en un repo público abrirían el sistema a cualquiera.
+- Rama local `github` = `origin/main`. **Para la próxima subida** repetir el mismo método (árbol de `main` sin PDF ni `.claude/`
+  como commit nuevo sobre `origin/main`); **no** hacer `git push` de `main` ni forzar.
+
+### 2026-11-16 · Se cayó el puente: causa, arreglo y vigilante
+- **Síntoma:** el compañero veía `DNS_PROBE_FINISHED_NXDOMAIN` en la URL del túnel. La app local seguía bien (200) y los 3
+  contenedores estaban "Up".
+- **Causa:** a las 14:49 UTC Cloudflare cortó la conexión y al reconectar respondió `Unauthorized: Tunnel not found`: borró el
+  **túnel rápido** (trycloudflare no garantiza duración). `cloudflared` reintenta para siempre pero nunca pide uno nuevo.
+- **Arreglo:** `docker restart silabos-tunel` → túnel nuevo con **otra URL** (compartida por chat, no se anota aquí). Verificado:
+  página 200 y `/api/historial` 403 por el túnel (el historial sigue cerrado desde fuera).
+- **Vigilante:** `deploy/vigilar_tunel.ps1`. Comprueba la app (si no responde, `docker compose up -d`) y el túnel (si no existe lo
+  crea; si su URL no responde 2 veces lo reinicia). Guarda la URL vigente en `datos\tunel_url.txt` (ignorado por git), anota en
+  `datos\vigilancia.log` y avisa en pantalla cuando cambia la URL. Probado a mano: sin fallos, escribió la URL.
+- **Tarea programada** `AulasVirtuales - vigilar puente` (cada 5 min y al iniciar sesión), registrada por el usuario. Primera
+  ejecución 10:30: resultado 0, sin incidencias y sin reiniciar el túnel (la URL sigue igual).
+- **Límite:** con túnel rápido la URL cambia en cada caída. Una URL fija requiere un túnel con nombre (cuenta de Cloudflare +
+  dominio) o el despliegue en el servidor de la UTI (Fase 1 del plan del historial).
+
+### 2026-11-16 · Dirección fija con Tailscale Funnel (reemplaza al túnel temporal)
+- **Por qué:** el túnel rápido de Cloudflare cambia de URL en cada caída. Se descartó Supabase (es base de datos; no ejecuta
+  la app en Python) y un hosting en la nube (no llega al Qwen interno 172.16.8.69 y los tokens pasarían por terceros).
+- **Qué se hizo:** servicio `funnel` en `docker-compose.yml` (perfil `publico`, imagen `tailscale/tailscale:v1.90.6`, modo
+  userspace, identidad en el volumen `tailscale_estado`) + `deploy/tailscale/funnel.json` (HTTPS 443 → `http://app:8770`,
+  Funnel activado). El usuario inició sesión en su cuenta de Tailscale y activó HTTPS/Funnel en su red.
+- **Dirección fija:** `aulasvirtuales.<tailnet>.ts.net` (completa: se comparte por chat, no se publica en el repo).
+- **Verificado por la dirección fija:** `/`, `/silabos`, `/guias`, `/historial` → 200; `/api/historial` → 403 y
+  `requiere_clave: true` (el historial sigue cerrado desde fuera). Los primeros intentos fallaban (reset TLS) hasta que
+  Tailscale emitió el certificado (~2 min). Tras `docker restart` del puente vuelve en ≤10 s con la **misma** dirección.
+- **Túnel temporal de Cloudflare apagado:** `silabos-tunel` detenido y sin reinicio automático (sigue creado, no borrado).
+- **Vigilante reescrito** (`deploy/vigilar_tunel.ps1`): ahora vigila la app y el puente Tailscale (`docker compose --profile
+  publico up -d` si algo cae; reinicia el puente si la dirección fija no responde 3 veces). Probado: salida 0, sin incidencias.
+- Documentado en `deploy/README.md`.
+
+### 2026-11-16 · Historial visible para todo el equipo con una clave compartida
+- El usuario quiere ver el historial desde cualquier equipo. Como la dirección fija es pública en internet, se eligió una
+  **clave del equipo** (no abrirlo a cualquiera).
+- `historial.html`: la clave se guarda en `localStorage` (antes `sessionStorage`), así cada navegador la pide **una sola vez**;
+  si el servidor responde 401 (clave cambiada o incorrecta) se olvida y se vuelve a pedir. Suite: 202 passed. App reconstruida.
+- **Pendiente del usuario:** definir `HISTORIAL_CLAVE` en `.env` (la elige y la escribe él; no pasa por el chat) y recrear la app.
+  Con clave definida, también se pide en este equipo (una vez por navegador).
+
+### 2026-11-16 · Sílabos: publicar solo los momentos elegidos
+- **Pedido:** poder cargar un momento concreto (p. ej. solo el Momento 2). Mockup aprobado: `diseno/mockup_publicar_momentos.html`.
+- **Paso 4 (`index.html`):** columna **Publicar** con una casilla por momento (por defecto todos marcados → igual que antes),
+  accesos *Marcar todos / Ninguno*, filas desmarcadas en gris ("No se publicará"; tras publicar, "Sin cambios en Canvas").
+  La confirmación dice cuántos y cuáles ("1 página Momento (Momento 2)") y el botón "Publicar 1 momento". Cambiar la selección
+  quita la confirmación; tras publicar se desmarca todo (para publicar otro: marcarlo, confirmar y "Publicar de nuevo").
+  Con ninguno marcado, el botón queda desactivado ("Elige al menos un momento"). Restaurar no cambia.
+- **Servidor (`servicio.publicar`):** quita repetidos, rechaza lista vacía y momentos que el sílabo no tiene (sin publicar nada).
+  Historial: "Publicado Momento 2" (singular) o "Publicado Momentos 1, 3".
+- **Pruebas:** +3 (`test_publicar_solo_un_momento_elegido`, `…sin_momentos…`, `…momento_inexistente…`); ajustado el texto
+  esperado en `test_historial`. Suite: **205 passed**. Probado en navegador contra el Canvas simulado: solo Momento 2 →
+  "✔ Publicada y verificada" y los demás "Sin cambios en Canvas". App de Docker reconstruida; en la dirección fija ya está.
+- `.claude/launch.json` (local, no se sube): el servidor de prueba `guias-prueba` arranca con `HISTORIAL=0` para no ensuciar
+  el historial.
+- **Clave del equipo creada por el usuario** (en `.env`; no se anota aquí). Verificado por la dirección fija y en local:
+  sin clave → 401, clave incorrecta → 401, con la clave → 200. La app en Docker la tiene cargada.

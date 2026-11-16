@@ -186,7 +186,7 @@ def test_publicar_rechazado_queda_como_error(mock):
     j = _analizar_silabo().json()
     assert client.post('/api/publicar', json=dict(sid=j['sid'], momentos=[1], confirmado=False)).status_code == 409
     e = historial.listar()[0]
-    assert e['accion'] == 'Publicar Momentos 1' and e['resultado'] == 'error'
+    assert e['accion'] == 'Publicar Momento 1' and e['resultado'] == 'error'
 
 
 # ---------------- Tarea 3: API ----------------

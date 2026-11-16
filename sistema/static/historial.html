@@ -80,7 +80,8 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const RES = {ok: '✔ Correcto', error: '✘ Error', avisos: '⚠ Con avisos'};
 const RES_SEL = {ok: '✔ Publicado / creado / correcto', error: '✘ No se publicó / falló', avisos: '⚠ Publicado con avisos aceptados'};
 let clave = '', abierta = null, editando = null, eventos = [];
-try { clave = sessionStorage.getItem('historial_clave') || ''; } catch (e) {}
+// la clave del equipo se recuerda en este navegador (se pide una sola vez); si deja de valer, se olvida y se vuelve a pedir
+try { clave = localStorage.getItem('historial_clave') || ''; } catch (e) {}
 
 function fecha(f) {
   const m = /^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d:\d\d))?/.exec(f || '');
@@ -90,7 +91,7 @@ async function pedir(url, opts = {}) {
   opts.headers = Object.assign({'X-Historial-Clave': clave}, opts.headers || {});
   const r = await fetch(api(url), opts);
   let j = {}; try { j = await r.json(); } catch (e) {}
-  if (r.status === 401) { $('clavebox').classList.remove('hidden'); throw new Error(j.detail || 'Falta la clave del historial.'); }
+  if (r.status === 401) { clave = ''; try { localStorage.removeItem('historial_clave'); } catch (e) {} $('clavebox').classList.remove('hidden'); throw new Error(j.detail || 'Falta la clave del historial.'); }
   if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'Error ' + r.status);
   return j;
 }
@@ -180,7 +181,7 @@ $('bcsv').onclick = async () => {   // la clave va en la cabecera, nunca en la U
 let espera;
 ['ftipo', 'fcurso', 'forden'].forEach(id => $(id).onchange = cargar);
 $('fq').oninput = () => { clearTimeout(espera); espera = setTimeout(cargar, 300); };
-$('bclave').onclick = () => { clave = $('clave').value; try { sessionStorage.setItem('historial_clave', clave); } catch (e) {} $('clavebox').classList.add('hidden'); cargar(); };
+$('bclave').onclick = () => { clave = $('clave').value; try { localStorage.setItem('historial_clave', clave); } catch (e) {} $('clavebox').classList.add('hidden'); cargar(); };
 (async () => {
   try {
     const est = await (await fetch(api('api/historial/estado'))).json();

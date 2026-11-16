@@ -162,14 +162,15 @@ class Publicacion(BaseModel):
 @app.post('/api/publicar')
 def publicar(p: Publicacion):
     s = _sesion(p.sid)
-    lista = ', '.join(str(n) for n in sorted(p.momentos))
+    elegidos = sorted(set(p.momentos))
+    lista = ('Momento ' if len(elegidos) == 1 else 'Momentos ') + ', '.join(str(n) for n in elegidos)
     try:
         res = servicio.publicar(s, p.momentos, p.confirmado)
     except servicio.ErrorEntrada as e:
-        _hist('silabos', f'Publicar Momentos {lista}', 'error', s, detalle=str(e))
+        _hist('silabos', f'Publicar {lista}', 'error', s, detalle=str(e))
         raise HTTPException(409, str(e))
     oks = [n for n, r in res.items() if r.get('ok')]
-    _hist('silabos', f'Publicado Momentos {lista}' if oks else f'Publicar Momentos {lista}',
+    _hist('silabos', f'Publicado {lista}' if oks else f'Publicar {lista}',
           'ok' if len(oks) == len(res) else ('avisos' if oks else 'error'), s,
           detalle='; '.join(f'Momento {n}: {r.get("mensaje", "")}' for n, r in sorted(res.items()) if not r.get('ok')),
           enlaces=[dict(texto=f'Momento {n}', url=r['url']) for n, r in sorted(res.items()) if r.get('url')])

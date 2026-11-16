@@ -129,10 +129,15 @@ def publicar(sesion, numeros, confirmado=False):
         raise ErrorEntrada('La IA completó datos después de tu vista previa: genera la vista previa de nuevo antes de publicar.')
     if not sesion.get('listo'):
         raise ErrorEntrada('Falta generar una vista previa completa antes de publicar.')
+    numeros = sorted({int(n) for n in numeros})   # el docente elige cuáles; sin repetir
+    if not numeros:
+        raise ErrorEntrada('Elige al menos un momento para publicar.')
+    ajenos = [n for n in numeros if n not in sesion['paginas']]
+    if ajenos:
+        raise ErrorEntrada(f'Este sílabo no tiene el Momento {", ".join(map(str, ajenos))}: no se publicó nada.')
     cv = sesion['canvas']
     res = {}
     for n in numeros:
-        n = int(n)
         dest = sesion['destinos'].get(n)
         html = sesion['paginas'].get(n, '')
         if not dest:

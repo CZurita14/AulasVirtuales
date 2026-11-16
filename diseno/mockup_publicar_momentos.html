@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Publicar momentos elegidos</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480;--ok:#1e7b4f;--warn:#a6480c;--bad:#b42318}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o)}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--m2)} .card .sub{margin:0 0 16px;color:var(--mut);font-size:14px}
+  .chip{display:inline-flex;gap:6px;align-items:center;background:#f1ecf8;color:var(--m);border-radius:20px;padding:4px 10px;font-size:12.5px}
+  .chip.ok{background:#e7f5ee;color:var(--ok)} .chip.w{background:#fdf0e7;color:var(--warn)} .chip.bad{background:#fde8e6;color:var(--bad)} .chip.gris{background:#eee;color:#777}
+  button{font:inherit;font-size:14px;border-radius:8px;padding:10px 18px;cursor:pointer;border:1px solid var(--m);background:#fff;color:var(--m)}
+  button.pri{background:var(--m);color:#fff} button.sm{padding:4px 10px;font-size:12px} button:disabled{opacity:.45;cursor:not-allowed}
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.t th{background:#F7F3FB;color:var(--m);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr.off td{color:#9a93a8} tr.off a{color:#9a93a8}
+  .sel{width:18px;height:18px;accent-color:var(--m)}
+  .new{outline:2px dashed var(--o);outline-offset:3px;border-radius:6px}
+  .barsel{display:flex;gap:14px;align-items:center;font-size:13px;margin:0 0 8px;color:var(--mut)} .barsel a{color:var(--m);cursor:pointer;text-decoration:underline}
+  .confirm{display:flex;gap:10px;align-items:flex-start;background:#fff8f2;border:1px solid #f3d3b8;border-radius:8px;padding:12px;font-size:14px;margin:14px 0}
+  .nota{background:#fffdf3;border:1px dashed var(--o);border-radius:8px;padding:10px 14px;font-size:13px;margin:0 0 18px}
+  .nota b{color:var(--warn)}
+  h3{color:var(--m2);font-size:15px;margin:26px 0 8px}
+</style>
+</head>
+<body>
+<header><h1>Sílabo → Aula virtual</h1><small>Mockup · Paso 4 con selección de momentos</small></header>
+<div class="wrap">
+  <div class="nota"><b>Lo nuevo</b> está marcado con borde naranja punteado. Todo lo demás del paso 4 queda igual.
+    Por defecto <b>todos</b> los momentos vienen marcados, así que si no tocas nada funciona como hoy.</div>
+
+  <h3>Estado A · Antes de publicar: solo quiero el Momento 2</h3>
+  <div class="card">
+    <h2>4. Publicar en Canvas</h2>
+    <p class="sub">Se actualiza solo el contenido de cada página Momento. Antes de cambiarla guardamos una copia de lo que tenía, y después verificamos que quedó bien.</p>
+    <div class="barsel new">Elige qué momentos publicar: <a>Marcar todos</a> <a>Ninguno</a></div>
+    <table class="t">
+      <tr><th class="new" style="width:70px">Publicar</th><th>Momento</th><th>Página de Canvas</th><th>Estado</th><th></th></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 1</td><td><a href="#">Momento 1: Información general</a></td><td><span class="chip gris">No se publicará</span></td><td></td></tr>
+      <tr><td><input type="checkbox" class="sel" checked></td><td>Momento 2</td><td><a href="#">Momento 2: Desarrollo</a></td><td><span class="chip">Lista para publicar</span></td><td></td></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 3</td><td><a href="#">Momento 3: Aplicación</a></td><td><span class="chip gris">No se publicará</span></td><td></td></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 4</td><td><a href="#">Momento 4: Cierre</a></td><td><span class="chip gris">No se publicará</span></td><td></td></tr>
+    </table>
+    <label class="confirm"><input type="checkbox" checked style="margin-top:3px;width:18px;height:18px"><span>Confirmo que el curso <b>B26-PROGRAMACION ESTRUCTURADA</b> (ID 36283) es el correcto y autorizo reemplazar el contenido de <b class="new">1 página Momento (Momento 2)</b>.</span></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="pri new">Publicar 1 momento</button><button>⬇ Descargar ZIP</button><button>Terminar y borrar datos</button></div>
+  </div>
+
+  <h3>Estado B · Después de publicar</h3>
+  <div class="card">
+    <h2>4. Publicar en Canvas</h2>
+    <div class="barsel">Elige qué momentos publicar: <a>Marcar todos</a> <a>Ninguno</a></div>
+    <table class="t">
+      <tr><th style="width:70px">Publicar</th><th>Momento</th><th>Página de Canvas</th><th>Estado</th><th></th></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 1</td><td><a href="#">Momento 1: Información general</a></td><td><span class="chip gris">Sin cambios en Canvas</span></td><td></td></tr>
+      <tr><td><input type="checkbox" class="sel"></td><td>Momento 2</td><td><a href="#">Momento 2: Desarrollo</a></td><td><span class="chip ok">✔ Publicada y verificada</span></td><td><button class="sm">Restaurar anterior</button></td></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 3</td><td><a href="#">Momento 3: Aplicación</a></td><td><span class="chip gris">Sin cambios en Canvas</span></td><td></td></tr>
+      <tr class="off"><td><input type="checkbox" class="sel"></td><td>Momento 4</td><td><a href="#">Momento 4: Cierre</a></td><td><span class="chip gris">Sin cambios en Canvas</span></td><td></td></tr>
+    </table>
+    <p class="sub new" style="margin:10px 0 0;padding:4px">Si luego quieres publicar otro, márcalo y pulsa <b>Publicar de nuevo</b>: solo se envían los marcados.</p>
+  </div>
+
+  <h3>Reglas</h3>
+  <ul style="font-size:14px;line-height:1.7">
+    <li>Con <b>ninguno</b> marcado, el botón Publicar queda desactivado.</li>
+    <li>Los momentos sin página en el curso no tienen casilla (como hoy: "Sin página en el curso").</li>
+    <li>El servidor solo acepta momentos que existan en esa carga; el historial anota qué momentos se publicaron (p. ej. "Publicado Momento 2").</li>
+    <li>La vista previa y la lista de control siguen revisando los 4 momentos.</li>
+  </ul>
+</div>
+</body>
+</html>

@@ -22,3 +22,21 @@ curl --resolve cia.indoamerica.edu.ec:443:127.0.0.1 https://cia.indoamerica.edu.
 ```
 
 La aplicación debe funcionar también en `/` para el acceso local. La prueba `sistema/tests/test_ruta_publica.py` verifica las operaciones de JavaScript en ambas rutas; requiere Node.js solo para ejecutar esa prueba.
+
+## Dirección fija desde este equipo (Tailscale Funnel)
+
+Mientras la UTI no lo instale en su servidor, el sistema puede publicarse desde este equipo con una dirección HTTPS
+**fija** (`https://aulasvirtuales.<tu-tailnet>.ts.net`), que no cambia al reiniciar.
+
+```bash
+docker compose --profile publico up -d
+```
+
+- La primera vez, `docker logs aulasvirtuales-silabos-funnel-1` muestra el enlace para iniciar sesión en Tailscale, y
+  hay que activar **HTTPS y Funnel** en la red de Tailscale (el propio comando `tailscale funnel` da el enlace).
+- La identidad se guarda en el volumen `tailscale_estado`: **no** borrarlo o la dirección cambia.
+- `deploy/tailscale/funnel.json` envía todo a `http://app:8770`. El Historial sigue cerrado desde fuera (pasa por proxy).
+- Vigilante: `deploy/vigilar_tunel.ps1` (tarea programada cada 5 min) levanta la app o el puente si dejan de responder y
+  anota en `datos/vigilancia.log`.
+- Para cerrarlo: `docker compose stop funnel`.
+- No escribir la dirección pública en archivos del repo (es público): se comparte por chat.

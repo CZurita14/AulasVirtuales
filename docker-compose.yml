@@ -24,9 +24,29 @@ services:
     restart: unless-stopped
     # sin "ports": Qdrant solo es accesible para el sistema dentro de la red de Docker
 
+  # Dirección pública FIJA con HTTPS (Tailscale Funnel): https://aulasvirtuales.<tu-tailnet>.ts.net
+  # Solo se levanta con:  docker compose --profile publico up -d
+  # La primera vez: `docker logs aulasvirtuales-silabos-funnel-1` muestra el enlace para iniciar sesión en Tailscale.
+  funnel:
+    image: tailscale/tailscale:v1.90.6
+    profiles: ["publico"]
+    hostname: aulasvirtuales
+    environment:
+      TS_HOSTNAME: aulasvirtuales
+      TS_STATE_DIR: /var/lib/tailscale        # la identidad (y por tanto la dirección) se conserva aquí
+      TS_USERSPACE: "true"
+      TS_SERVE_CONFIG: /config/funnel.json
+    volumes:
+      - tailscale_estado:/var/lib/tailscale
+      - ./deploy/tailscale:/config:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+
 volumes:
   qdrant_data:
   historial_data:
+  tailscale_estado:
 
 # Evita que Docker asigne 172.18.0.0/16, utilizada por la red universitaria.
 networks:

@@ -155,6 +155,26 @@ def test_salida_igual_a_la_validada_en_html(monkeypatch):
         assert norm(s['paginas'][n]) == norm(ref), n
 
 
+def test_publicar_solo_un_momento_elegido(mock):
+    j = analizar().json(); generar(j['sid'])
+    res = publicar(j['sid'], [2, 2]).json()['resultados']
+    assert list(res) == ['2'] and res['2']['ok']
+    assert mock.puts == ['momento-2']          # los momentos 1, 3 y 4 no se tocan
+
+
+def test_publicar_sin_momentos_elegidos_no_hace_nada(mock):
+    j = analizar().json(); generar(j['sid'])
+    r = publicar(j['sid'], [])
+    assert r.status_code == 409 and 'al menos un momento' in r.json()['detail']
+    assert mock.puts == []
+
+
+def test_publicar_momento_inexistente_se_rechaza(mock):
+    j = analizar().json(); generar(j['sid'])
+    r = publicar(j['sid'], [2, 7])
+    assert r.status_code == 409 and mock.puts == []
+
+
 # ---------------- seguridad y aprobación ----------------
 def test_sin_confirmacion_no_se_publica(mock):
     j = analizar().json(); generar(j['sid'])

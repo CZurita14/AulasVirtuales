@@ -52,6 +52,9 @@
   .confirm input{margin-top:3px;width:18px;height:18px}
   .steps-help{font-size:13px;line-height:1.6;margin:6px 0 0;padding-left:18px;color:var(--mut)}
   .hidden{display:none}
+  .chip.gris{background:#eee;color:#777} tr.off td,tr.off td a{color:#9a93a8}
+  .barsel{display:flex;gap:14px;align-items:center;font-size:13px;margin:0 0 8px;color:var(--mut)} .barsel a{color:var(--m);cursor:pointer;text-decoration:underline}
+  input.sel{width:18px;height:18px;accent-color:var(--m)}
   .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:g .7s linear infinite;vertical-align:-3px;margin-right:6px}
   @keyframes g{to{transform:rotate(360deg)}}
   @media(max-width:860px){.grid2,.preview{grid-template-columns:1fr}.steps{flex-wrap:wrap}}
@@ -153,6 +156,7 @@
     <div class="card">
       <h2>4. Publicar en Canvas</h2>
       <p class="sub">Se actualiza solo el contenido de cada página Momento. Antes de cambiarla guardamos una copia de lo que tenía, y después verificamos que quedó bien.</p>
+      <div class="barsel" id="barsel">Elige qué momentos publicar: <a id="seltodos">Marcar todos</a> <a id="selninguno">Ninguno</a></div>
       <table class="t" id="tpub"></table>
       <label class="confirm"><input type="checkbox" id="conf"><span id="conftxt"></span></label>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="pri" id="pub" disabled>Publicar en Canvas</button>
@@ -217,7 +221,7 @@ $('b1').onclick = async () => {
   const fd = new FormData(); fd.append('pdf', archivo); fd.append('url', $('url').value.trim()); fd.append('token', $('token').value.trim());
   fd.append('usar_ia', $('usaria').checked ? '1' : '0');
   cargando($('b1'), 'Leyendo el sílabo y tu curso…');
-  try { R = await api('/api/analizar', {method: 'POST', body: fd}); $('token').value = ''; pintar2(); ir(2); seguirIA(R.ia); }
+  try { R = await api('/api/analizar', {method: 'POST', body: fd}); SEL = null; $('token').value = ''; pintar2(); ir(2); seguirIA(R.ia); }
   catch (e) { $('err1').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
   finally { listo($('b1')); valida(); }
 };
@@ -295,36 +299,60 @@ $('b3').onclick = () => { pintar4({}); ir(4); };
 
 // ---------- Paso 4 ----------
 const publicables = () => R.momentos.filter(m => R.destinos[m.n]).map(m => m.n);
+let SEL = null;   // momentos que el docente elige publicar (por defecto, todos)
+const elegidos = () => publicables().filter(n => SEL.has(n));
 function pintar4(res) {
-  $('tpub').innerHTML = '<tr><th>Momento</th><th>Página de Canvas</th><th>Estado</th><th></th></tr>' + R.momentos.map(m => {
-    const d = R.destinos[m.n], r = res[m.n];
+  if (!SEL) SEL = new Set(publicables());
+  const huboPublicacion = Object.keys(res).length > 0;
+  $('tpub').innerHTML = '<tr><th style="width:70px">Publicar</th><th>Momento</th><th>Página de Canvas</th><th>Estado</th><th></th></tr>' + R.momentos.map(m => {
+    const d = R.destinos[m.n], r = res[m.n], on = d && SEL.has(m.n);
     const estado = !d ? '<span class="chip bad">Sin página en el curso</span>'
-      : !r ? '<span class="chip">Lista para publicar</span>'
+      : !r ? (on ? '<span class="chip">Lista para publicar</span>'
+               : `<span class="chip gris">${huboPublicacion ? 'Sin cambios en Canvas' : 'No se publicará'}</span>`)
       : r.restaurada ? `<span class="chip w">${esc(r.mensaje)}</span>`
       : `<span class="chip ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✔ ' : '✘ '}${esc(r.mensaje)}</span>`;
     const acc = r && !r.restaurada && d ? `<button class="sm" data-rest="${m.n}">Restaurar anterior</button>` : '';
-    return `<tr><td>Momento ${m.n}</td><td>${d ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.titulo)}</a>` : '—'}</td><td>${estado}</td><td>${acc}</td></tr>`; }).join('');
+    const caja = d ? `<input type="checkbox" class="sel" data-sel="${m.n}" ${on ? 'checked' : ''} aria-label="Publicar Momento ${m.n}">` : '';
+    return `<tr class="${d && !on && !r ? 'off' : ''}"><td>${caja}</td><td>Momento ${m.n}</td><td>${d ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.titulo)}</a>` : '—'}</td><td>${estado}</td><td>${acc}</td></tr>`; }).join('');
   document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => restaurar(+b.dataset.rest, b));
-  $('conftxt').innerHTML = `Confirmo que el curso <b>${esc(R.curso.nombre)}</b> (ID ${esc(R.curso.id)}) es el correcto y autorizo reemplazar el contenido de ${publicables().length} página(s) Momento.`;
+  document.querySelectorAll('[data-sel]').forEach(c => c.onchange = () => {
+    c.checked ? SEL.add(+c.dataset.sel) : SEL.delete(+c.dataset.sel);
+    $('conf').checked = false;   // cambió lo que se va a publicar: hay que volver a confirmar
+    pintar4(RES);
+  });
+  const el = elegidos(), cuales = el.map(n => 'Momento ' + n).join(', ');
+  $('conftxt').innerHTML = `Confirmo que el curso <b>${esc(R.curso.nombre)}</b> (ID ${esc(R.curso.id)}) es el correcto y autorizo reemplazar el contenido de <b>${el.length} página${el.length === 1 ? '' : 's'} Momento${el.length ? ` (${cuales})` : ''}</b>.`;
   const pendientes = Object.values(G.control).flat().filter(i => !i.ok).length;
   if (pendientes) $('conftxt').innerHTML += ` He revisado los ${pendientes} avisos de la lista de control y decido publicar de todos modos.`;
   const sinDestinos = !publicables().length;
+  $('barsel').classList.toggle('hidden', sinDestinos);
   $('conf').disabled = sinDestinos;
   if (sinDestinos) {
     $('conf').checked = false;
     $('conftxt').textContent = 'No se encontraron páginas Momento en este curso. Revisa Páginas y Módulos en Canvas, o descarga el ZIP para guardar el contenido generado.';
   }
-  $('pub').disabled = !$('conf').checked || sinDestinos;
+  $('pub').textContent = !el.length ? 'Elige al menos un momento' : huboPublicacion ? 'Publicar de nuevo'
+    : `Publicar ${el.length === publicables().length ? 'en Canvas' : el.length + ' momento' + (el.length === 1 ? '' : 's')}`;
+  $('pub').disabled = !$('conf').checked || !el.length;
   $('dl').href = appUrl('/api/descargar/' + encodeURIComponent(R.sid));
 }
 let RES = {};
-$('conf').onchange = () => $('pub').disabled = !$('conf').checked || !publicables().length;
+$('conf').onchange = () => $('pub').disabled = !$('conf').checked || !elegidos().length;
+$('seltodos').onclick = () => { SEL = new Set(publicables()); $('conf').checked = false; pintar4(RES); };
+$('selninguno').onclick = () => { SEL = new Set(); $('conf').checked = false; pintar4(RES); };
 $('pub').onclick = async () => {
+  const el = elegidos();
+  if (!el.length) return;
   cargando($('pub'), 'Publicando…'); $('err4').innerHTML = '';
-  try { const j = await post('/api/publicar', {sid: R.sid, momentos: publicables(), confirmado: $('conf').checked});
-    RES = Object.assign(RES, j.resultados); pintar4(RES); }
+  let ok = false;
+  try { const j = await post('/api/publicar', {sid: R.sid, momentos: el, confirmado: $('conf').checked});
+    RES = Object.assign(RES, j.resultados); ok = true; }
   catch (e) { $('err4').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
-  finally { listo($('pub')); $('pub').textContent = 'Publicar de nuevo'; $('pub').disabled = !$('conf').checked; }
+  finally {
+    listo($('pub'));
+    if (ok) { SEL = new Set(); $('conf').checked = false; }   // lo publicado se desmarca: para otro, márcalo y confirma
+    pintar4(RES);
+  }
 };
 async function restaurar(n, btn) {
   if (!confirm(`¿Volver la página del Momento ${n} a como estaba antes de publicar?`)) return;
