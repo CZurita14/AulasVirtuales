@@ -321,32 +321,54 @@ def test_puerta_de_enlace_se_lee_de_la_tabla_de_rutas(tmp_path, monkeypatch):
     assert appmod._puerta_de_enlace(str(tmp_path / 'no-existe')) is None
 
 
+puente = TestClient(appmod.app, client=('192.168.240.4', 40000))   # el contenedor del puente (proxy)
+
+
 def test_limita_intentos_fallidos_de_clave(monkeypatch):
     monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
     h = lambda k: {'X-Historial-Clave': k, 'X-Forwarded-For': '203.0.113.9'}
     for _ in range(appmod._MAX_FALLOS):
-        assert client.get('/api/historial', headers=h('mala')).status_code == 401
-    r = client.get('/api/historial', headers=h('secreto-123'))
+        assert puente.get('/api/historial', headers=h('mala')).status_code == 401
+    r = puente.get('/api/historial', headers=h('secreto-123'))
     assert r.status_code == 429 and 'intentos' in r.json()['detail']     # bloqueado aunque ahora acierte
     otro = {'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.7'}
-    assert client.get('/api/historial', headers=otro).status_code == 200  # otra persona no queda bloqueada
+    assert puente.get('/api/historial', headers=otro).status_code == 200  # otra persona no queda bloqueada
 
 
 def test_el_limite_usa_la_ip_que_agrega_el_proxy(monkeypatch):
     """Cambiar la primera IP de X-Forwarded-For (la que inventa el cliente) no salta el límite."""
     monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
     for i in range(appmod._MAX_FALLOS):
-        client.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'10.0.0.{i}, 203.0.113.9'})
-    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '10.9.9.9, 203.0.113.9'})
+        puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'10.0.0.{i}, 203.0.113.9'})
+    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '10.9.9.9, 203.0.113.9'})
     assert r.status_code == 429
 
 
-def test_limite_global_de_fallos(monkeypatch):
+def test_fallos_de_muchos_origenes_no_bloquean_al_equipo(monkeypatch):
+    """Sin bloqueo global: alguien de fuera no puede dejar sin historial a todo el equipo a base de fallos."""
     monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
-    for i in range(appmod._MAX_FALLOS_TOTAL):
+    for i in range(200):
+        puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.{i // 250}.{i % 250}'})
+    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.200'})
+    assert r.status_code == 200
+
+
+def test_x_forwarded_for_solo_cuenta_si_viene_del_proxy(monkeypatch):
+    """Una visita directa (no del puente) no puede repartir sus fallos inventando X-Forwarded-For."""
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    for i in range(appmod._MAX_FALLOS):
         client.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.113.{i}'})
-    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.200'})
+    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.9'})
     assert r.status_code == 429
+
+
+def test_intentos_simultaneos_no_saltan_el_limite(monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    h = {'X-Historial-Clave': 'mala', 'X-Forwarded-For': '203.0.113.50'}
+    with ThreadPoolExecutor(8) as ex:
+        codigos = list(ex.map(lambda _: puente.get('/api/historial', headers=h).status_code, range(40)))
+    assert codigos.count(401) == appmod._MAX_FALLOS and codigos.count(429) == 40 - appmod._MAX_FALLOS
 
 
 def test_sin_clave_escrita_no_cuenta_como_fallo(monkeypatch):

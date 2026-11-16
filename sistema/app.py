@@ -411,24 +411,29 @@ def _abierto_sin_clave(request):
     return historial.local() and ip in _ips_locales() and not _por_proxy(request)
 
 
-# Límite de intentos fallidos de clave (la dirección pública está en internet)
-_MAX_FALLOS, _MAX_FALLOS_TOTAL, _VENTANA = 10, 40, 15 * 60   # varias personas pueden salir por la misma IP
-_FALLOS = {}            # origen -> [instantes de fallos]; '*' = todos
+# Límite de intentos fallidos de clave (la dirección pública está en internet). Solo por origen: un límite
+# global permitiría a cualquiera dejar sin historial a todo el equipo a base de fallos.
+_MAX_FALLOS, _VENTANA = 10, 15 * 60   # 10 y no menos: varias personas pueden salir por la misma IP
+_FALLOS = {}            # origen -> [instantes de fallos recientes]
 _fallos_lock = threading.Lock()
 
 
 def _origen(request):
-    """Quién intenta: la IP que agregó el proxy (la última de X-Forwarded-For; las primeras las puede inventar
-    el cliente) o, sin proxy, la IP de la conexión."""
+    """Quién intenta. Si la visita la trae el proxy (el puente: no es el propio equipo), la IP que este agregó al final
+    de X-Forwarded-For (las primeras las puede inventar el cliente); si no, la IP de la conexión, ignorando cabeceras."""
+    ip = request.client.host if request.client else ''
     xff = request.headers.get('x-forwarded-for', '')
-    if xff.strip():
+    if ip not in _ips_locales() and xff.strip():
         return xff.split(',')[-1].strip()
-    return request.client.host if request.client else ''
+    return ip
 
 
 def _recientes(origen, ahora):
     v = [t for t in _FALLOS.get(origen, []) if ahora - t < _VENTANA]
-    _FALLOS[origen] = v
+    if v:
+        _FALLOS[origen] = v
+    else:
+        _FALLOS.pop(origen, None)
     return v
 
 
@@ -444,15 +449,18 @@ def _acceso_historial(request, x_clave):
                                      '(o HISTORIAL_LOCAL=1 si el sistema solo se usa en este equipo).')
         return
     origen, ahora = _origen(request), time.monotonic()
+    # revisar, comparar y anotar en un solo paso: intentos simultáneos no pueden colarse antes de contarse
     with _fallos_lock:
-        if len(_recientes(origen, ahora)) >= _MAX_FALLOS or len(_recientes('*', ahora)) >= _MAX_FALLOS_TOTAL:
+        if len(_FALLOS) > 5000:   # no acumular orígenes viejos
+            for o in list(_FALLOS):
+                _recientes(o, ahora)
+        if len(_recientes(origen, ahora)) >= _MAX_FALLOS:
             raise HTTPException(429, 'Demasiados intentos fallidos de clave. Espera 15 minutos e inténtalo de nuevo.')
-    if not secrets.compare_digest((x_clave or '').encode('utf-8'), k.encode('utf-8')):
+        if secrets.compare_digest((x_clave or '').encode('utf-8'), k.encode('utf-8')):
+            return
         if x_clave:   # sin clave escrita no cuenta como intento
-            with _fallos_lock:
-                _FALLOS.setdefault(origen, []).append(ahora)
-                _FALLOS.setdefault('*', []).append(ahora)
-        raise HTTPException(401, 'Falta la clave del historial o no es correcta.')
+            _FALLOS.setdefault(origen, []).append(ahora)
+    raise HTTPException(401, 'Falta la clave del historial o no es correcta.')
 
 
 _FORMULA = ('=', '+', '-', '@', '\t', '\r')

@@ -395,3 +395,13 @@
   vuelve a pedirla. Para computadoras compartidas.
 - Pruebas: +7 en `test_historial.py` (el cliente de pruebas ahora es 127.0.0.1). Suite: **212 passed**. App reconstruida.
   Verificado por la dirección fija: sin clave 401, clave mala 401, con clave 200; en local con clave 200.
+- Subido a GitHub: commit de sincronización `90e8611` sobre `83fbe0d` (avance rápido, sin forzar; 0 PDF, sin `.env` ni la clave).
+
+### 2026-11-16 · Corrección del límite de intentos (revisión de seguridad del commit 33bf24e)
+- **Sin bloqueo global:** con 40 fallos en total se bloqueaba a todos → cualquiera podía dejar sin historial al equipo. Ahora
+  el límite es solo por origen (10 fallos en 15 min).
+- **Atómico:** revisar, comparar la clave y anotar el fallo ocurre bajo un mismo candado; intentos simultáneos no se cuelan.
+- **X-Forwarded-For solo del proxy:** se usa únicamente si la conexión viene del puente (no del propio equipo); una visita
+  directa no puede repartir sus fallos inventando cabeceras. Los orígenes sin fallos recientes se descartan (no crece sin fin).
+- Pruebas: +2 netas (sin bloqueo global, XFF solo del proxy, 40 intentos simultáneos → exactamente 10 cuentan). Suite:
+  **214 passed**. App reconstruida; por la dirección fija: sin clave 401, mala 401, con clave 200; local con clave 200.
