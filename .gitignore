@@ -15,3 +15,6 @@ reportes_ia/
 *.sqlite3
 tmp/
 output/
+
+# historial de cargas local (SQLite)
+datos/

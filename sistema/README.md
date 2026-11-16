@@ -4,6 +4,26 @@ Asistente web que convierte el sílabo institucional (PDF) en las páginas **"Mo
 de Canvas y **las publica en el curso con el token del docente**, previa revisión y aprobación.
 Implementa las reglas de `../PROMPT_MAESTRO_Silabo_a_Canvas.md` en código.
 
+## Menú
+`/` muestra dos opciones: **Sílabos** (`/silabos`, páginas "Momento N") y **Guías prácticas** (`/guias`).
+
+### Guías prácticas → tareas PAE + rúbricas
+Pide sílabo PDF + una o varias guías prácticas PDF (formato FOR-GPFM) + URL del curso + token. Por cada guía:
+1. La empareja con su momento (título y fechas) y propone el nombre **`PAE#-Nombre de la guía`** (# = "Guía N°").
+2. Toma la rúbrica del momento y, opcionalmente, la adapta a la guía con Qwen (una llamada por indicador; lo que no
+   cumpla las reglas se queda con el texto del sílabo). Todo es editable.
+3. Vista previa de la tarea + lista de control (formato del nombre, duplicados, fechas, rúbrica completa y puntos).
+4. Con confirmación: crea la tarea **sin publicar** en el grupo **Actividades**, la rúbrica con el **mismo nombre**
+   asociada para calificar, y la agrega al módulo "Momento N". Relee y verifica; "Deshacer" borra solo lo creado en la sesión.
+
+### Historial de cargas
+Botón **🕘 Historial** (arriba a la derecha) → `/historial`: cada análisis, publicación, restauración, PAE creada y
+"Deshacer" queda registrado con fecha, tipo, nombre del archivo, curso, resultado y enlaces a Canvas. Filtros, detalle por
+fila, **corrección manual** (resultado real + nota; el original queda tachado) y **Exportar CSV**. Nunca guarda el token ni
+el PDF. Base SQLite en `HISTORIAL_DB` (Docker: volumen `historial_data` → `/datos/historial.sqlite`; local:
+`datos/historial.sqlite`). `HISTORIAL=0` lo apaga; `HISTORIAL_CLAVE` exige clave (cabecera `X-Historial-Clave`, nunca en la URL). Sin clave queda cerrado (403), salvo `HISTORIAL_LOCAL=1` en el propio equipo (nunca detrás de un proxy); el CSV neutraliza celdas que empiezan con = + - @.
+Las filas "reconstruido" son lo cargado antes de que existiera el historial.
+
 ## Qué pide al docente
 1. **Sílabo PDF**.
 2. **URL del curso**: `https://indoamerica.instructure.com/courses/12345`.

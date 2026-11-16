@@ -38,6 +38,15 @@ class MockCanvas:
             dict(type='Page', title=f'Momento {n}', page_url=slugs[n])]) for n in slugs if n not in sin]
         self.puts = []
         self.fallar_put = set()
+        # Guías prácticas: grupos de tareas, tareas, rúbricas y elementos de módulo
+        self.grupos = [dict(id=501, name='Tareas'), dict(id=502, name='Actividades')]
+        self.tareas = {601 + k: dict(id=601 + k, name=f'Actividad {k + 1}', assignment_group_id=502, published=k == 0,
+                                     points_possible=10) for k in range(4)}
+        self.rubricas = {701: dict(id=701, title='RÚBRICA - PROYECTO INTERDISCIPLINARIO SOCIOFORMATIVO (PIS)',
+                                   points_possible=60, data=[])}
+        self.items_modulo = []
+        self.fallar_rubrica = False
+        self._sig = 900
 
     def handler(self, req: httpx.Request) -> httpx.Response:
         if req.headers.get('authorization') != f'Bearer {TOKEN}':
@@ -62,6 +71,64 @@ class MockCanvas:
             pm = re.match(r'^/pages/([^/]+)$', sub)
             if pm and pm.group(1) in self.paginas:
                 return httpx.Response(200, json=self.paginas[pm.group(1)])
+            if sub == '/assignment_groups':
+                return httpx.Response(200, json=self.grupos)
+            if sub == '/assignments':
+                t = (q.get('search_term') or [''])[0].lower()
+                return httpx.Response(200, json=[a for a in self.tareas.values() if t in a['name'].lower()])
+            am = re.match(r'^/assignments/(\d+)$', sub)
+            if am and int(am.group(1)) in self.tareas:
+                return httpx.Response(200, json=self.tareas[int(am.group(1))])
+            if sub == '/rubrics':
+                return httpx.Response(200, json=list(self.rubricas.values()))
+            rm = re.match(r'^/rubrics/(\d+)$', sub)
+            if rm and int(rm.group(1)) in self.rubricas:
+                return httpx.Response(200, json=self.rubricas[int(rm.group(1))])
+        if req.method == 'POST':
+            if sub == '/assignments':
+                a = json.loads(req.content.decode('utf-8'))['assignment']
+                self._sig += 1
+                a = dict(a, id=self._sig)
+                self.tareas[a['id']] = a
+                return httpx.Response(201, json=a)
+            if sub == '/rubrics':
+                if self.fallar_rubrica:
+                    return httpx.Response(500, json={'errors': [{'message': 'boom'}]})
+                f = {k: v[0] for k, v in parse_qs(req.content.decode('utf-8')).items()}
+                crit = {}
+                for k, v in f.items():
+                    cm = re.match(r'^rubric\[criteria\]\[(\d+)\]\[(\w+)\](?:\[(\d+)\]\[(\w+)\])?$', k)
+                    if cm:
+                        c = crit.setdefault(int(cm.group(1)), dict(ratings={}))
+                        if cm.group(3) is None:
+                            c[cm.group(2)] = v
+                        else:
+                            c['ratings'].setdefault(int(cm.group(3)), {})[cm.group(4)] = v
+                data = [dict(description=c['description'], points=float(c['points']),
+                             ratings=[dict(r, points=float(r['points'])) for _, r in sorted(c['ratings'].items())])
+                        for _, c in sorted(crit.items())]
+                self._sig += 1
+                rub = dict(id=self._sig, title=f['rubric[title]'], data=data,
+                           points_possible=sum(c['points'] for c in data))
+                self.rubricas[rub['id']] = rub
+                aid = int(f['rubric_association[association_id]'])
+                if aid in self.tareas and f.get('rubric_association[use_for_grading]') == 'true':
+                    self.tareas[aid]['rubric'] = data
+                    self.tareas[aid]['rubric_settings'] = dict(id=rub['id'], title=rub['title'])
+                return httpx.Response(200, json={'rubric': rub, 'rubric_association': dict(id=self._sig + 1, rubric_id=rub['id'])})
+            mm = re.match(r'^/modules/(\d+)/items$', sub)
+            if mm:
+                it = json.loads(req.content.decode('utf-8'))['module_item']
+                self._sig += 1
+                self.items_modulo.append(dict(it, id=self._sig, module_id=int(mm.group(1))))
+                return httpx.Response(200, json=self.items_modulo[-1])
+        if req.method == 'DELETE':
+            am = re.match(r'^/assignments/(\d+)$', sub)
+            if am and int(am.group(1)) in self.tareas:
+                return httpx.Response(200, json=self.tareas.pop(int(am.group(1))))
+            rm = re.match(r'^/rubrics/(\d+)$', sub)
+            if rm and int(rm.group(1)) in self.rubricas:
+                return httpx.Response(200, json=self.rubricas.pop(int(rm.group(1))))
         if req.method == 'PUT':
             pm = re.match(r'^/pages/([^/]+)$', sub)
             if pm and pm.group(1) in self.paginas:
@@ -92,7 +159,7 @@ def servir(puerto, mock=None):
             self.send_header('content-type', 'application/json; charset=utf-8')
             self.end_headers()
             self.wfile.write(r.content)
-        do_GET = do_PUT = _go
+        do_GET = do_PUT = do_POST = do_DELETE = _go
 
         def log_message(self, *a):
             pass

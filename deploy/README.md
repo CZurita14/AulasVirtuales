@@ -6,7 +6,7 @@ El DNS interno debe resolver `cia.indoamerica.edu.ec` a la IP interna del servid
 
 1. Instalar Docker y Docker Compose desde los repositorios del sistema operativo.
 2. Clonar el repositorio en `/home/uti/aulasvirtuales`.
-3. Copiar `.env.example` a `.env`, configurar Qwen y restringir los permisos del archivo a su propietario.
+3. Copiar `.env.example` a `.env`, configurar Qwen y restringir los permisos del archivo a su propietario. **Definir `HISTORIAL_CLAVE`** (o `HISTORIAL=0`): sin clave, el historial queda cerrado (403). No poner `HISTORIAL_LOCAL=1` en el servidor.
 4. Ejecutar `sudo docker compose up -d --build` desde la carpeta del proyecto.
 5. Copiar `nginx-aulasvirtuales.conf` a `/etc/nginx/snippets/aulasvirtuales.conf` e incluirlo dentro del bloque `server` HTTPS del dominio.
 6. Validar con `sudo nginx -t` y recargar con `sudo systemctl reload nginx`.

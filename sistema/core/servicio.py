@@ -50,8 +50,9 @@ def analizar(pdf, url, token, transport=None):
         else:
             plantillas[n], origen[n] = institucional, 'institucional'
             if n in destinos:
-                avisos.append(f'Momento {n}: la página "{destinos[n]["titulo"]}" no tiene la estructura de la plantilla; '
-                              'se usará la plantilla institucional.')
+                faltan = render.analizar_plantilla(cuerpo)['faltan'] if cuerpo else ['página vacía']
+                avisos.append(f'Momento {n}: la página "{destinos[n]["titulo"]}" no tiene la estructura de la plantilla '
+                              f'({"; ".join(faltan)}); se usará la plantilla institucional completa.')
 
     adv = validador.validar(sil, curso, None)
     adv += [dict(tipo='Canvas', texto=t, grave=True) for t in avisos]

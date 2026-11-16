@@ -13,7 +13,8 @@ from mock_canvas import MockCanvas, TOKEN
 
 
 @pytest.fixture(params=['sin_tbody', 'cabecera_sesiones', 'cuerpo_encabezado',
-                       'cuerpo_bibliografia', 'tabla_rubrica', 'celda_pis', 'sesiones_vacias'])
+                       'cuerpo_bibliografia', 'tabla_rubrica', 'celda_pis', 'sesiones_vacias',
+                       'sin_columna_enlaces'])
 def incompleta(request):
     soup = BeautifulSoup(render.leer_plantilla_institucional(), 'html.parser')
     b = render._bloques(soup)
@@ -30,6 +31,11 @@ def incompleta(request):
         b['rubrica'].find('table').unwrap()
     elif request.param == 'celda_pis':
         b['pis'].find('td').unwrap()
+    elif request.param == 'sin_columna_enlaces':      # la última casilla del modelo borrada por accidente
+        for tr in b['sesiones'].find_all('tr'):
+            celdas = tr.find_all(['th', 'td'], recursive=False)
+            if len(celdas) > 1:
+                celdas[-1].decompose()
     else:
         b['sesiones'].find('tbody').clear()
     return str(soup)
@@ -89,3 +95,39 @@ def test_solo_momento_1_incompleto_conserva_plantillas_de_los_demas(documento, m
     assert s['respaldos'][1] == str(rota)
     for n in (2, 3, 4):
         assert mock.paginas[f'momento-{n}']['body'] == valida
+
+
+def test_falta_columna_enlaces_se_nombra_en_el_aviso(documento, monkeypatch):
+    monkeypatch.setattr(silabo, 'leer', lambda _: copy.deepcopy(documento))
+    soup = BeautifulSoup(render.leer_plantilla_institucional(), 'html.parser')
+    for tr in render._bloques(soup)['sesiones'].find_all('tr'):
+        celdas = tr.find_all(['th', 'td'], recursive=False)
+        if len(celdas) > 1:
+            celdas[-1].decompose()
+    assert 'sesiones: falta la columna "Enlaces"' in render.analizar_plantilla(str(soup))['faltan']
+    mock = MockCanvas(plantilla_body=str(soup))
+    s = servicio.analizar('documento.pdf', 'https://indoamerica.instructure.com/courses/36254', TOKEN,
+                          transport=httpx.MockTransport(mock.handler))
+    assert any('falta la columna "Enlaces"' in a['texto'] for a in s['advertencias'])
+    servicio.generar(s)
+    for h in s['paginas'].values():
+        assert '>Enlaces</th>' in h and render.MARCA_ENLACE in h
+
+
+def test_enlaces_del_docente_se_conservan_al_volver_a_publicar(documento):
+    from core import propuestas
+    sil = copy.deepcopy(documento)
+    curso = dict(host='indoamerica.instructure.com', id='36254', slug='inicio')
+    prop = propuestas.proponer(sil)
+    n = sil['momentos'][0]['n']
+    h1 = render.render(sil, n, render.leer_plantilla_institucional(), curso, prop['propositos'][n], prop['complementaria'][n])
+    soup = BeautifulSoup(h1, 'html.parser')
+    filas = render._bloques(soup)['sesiones'].find('tbody').find_all('tr', recursive=False)
+    filas[0].find_all(['th', 'td'], recursive=False)[-1].string = ''
+    filas[0].find_all(['th', 'td'], recursive=False)[-1].append(
+        BeautifulSoup('<a href="https://zoom.us/j/123">Clase 1</a>', 'html.parser'))
+    h2 = render.render(sil, n, str(soup), curso, prop['propositos'][n], prop['complementaria'][n])
+    filas2 = render._bloques(BeautifulSoup(h2, 'html.parser'))['sesiones'].find('tbody').find_all('tr', recursive=False)
+    assert filas2[0].find('a', href='https://zoom.us/j/123') is not None
+    if len(filas2) > 1:
+        assert filas2[1].find_all(['th', 'td'], recursive=False)[-1].get_text(strip=True) == render.MARCA_ENLACE

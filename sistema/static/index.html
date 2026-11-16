@@ -58,7 +58,7 @@
 </style>
 </head>
 <body>
-<header><h1>Sílabo → Aula virtual</h1><small>Carga los "Momentos" de tu sílabo en tu curso de Canvas</small></header>
+<header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>Sílabo → Aula virtual</h1><small>Carga los "Momentos" de tu sílabo en tu curso de Canvas</small></div><span style="display:flex;gap:14px;align-items:center"><a href="./" style="color:#fff;opacity:.9;font-size:13.5px">← Menú principal</a><a class="bhist" href="historial" title="Ver todo lo que se ha cargado" style="display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:12.5px;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:4px 11px;background:rgba(255,255,255,.08);opacity:1">🕘 Historial</a></span></header>
 
 <div class="wrap">
   <div class="steps">
@@ -308,7 +308,13 @@ function pintar4(res) {
   $('conftxt').innerHTML = `Confirmo que el curso <b>${esc(R.curso.nombre)}</b> (ID ${esc(R.curso.id)}) es el correcto y autorizo reemplazar el contenido de ${publicables().length} página(s) Momento.`;
   const pendientes = Object.values(G.control).flat().filter(i => !i.ok).length;
   if (pendientes) $('conftxt').innerHTML += ` He revisado los ${pendientes} avisos de la lista de control y decido publicar de todos modos.`;
-  $('pub').disabled = !$('conf').checked || !publicables().length;
+  const sinDestinos = !publicables().length;
+  $('conf').disabled = sinDestinos;
+  if (sinDestinos) {
+    $('conf').checked = false;
+    $('conftxt').textContent = 'No se encontraron páginas Momento en este curso. Revisa Páginas y Módulos en Canvas, o descarga el ZIP para guardar el contenido generado.';
+  }
+  $('pub').disabled = !$('conf').checked || sinDestinos;
   $('dl').href = appUrl('/api/descargar/' + encodeURIComponent(R.sid));
 }
 let RES = {};
@@ -393,5 +399,6 @@ function ir(n) {
   window.scrollTo(0, 0);
 }
 </script>
+<script>fetch(new URL('api/historial/estado', new URL('./', location.href))).then(r => r.json()).then(e => { if (!e.habilitado) document.querySelectorAll('.bhist').forEach(b => b.remove()); }).catch(() => {});</script>
 </body>
 </html>

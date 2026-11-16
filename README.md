@@ -14,6 +14,12 @@ Abrir http://localhost:8770. Para acceso externo se requiere HTTPS mediante un p
 
 La aplicación permite revisar las páginas antes de publicar, conserva referencias sin enlace, incluye toda la bibliografía complementaria por defecto y sustituye plantillas incompletas por la institucional. Cada publicación guarda un respaldo que puede restaurarse.
 
+## Qué incluye
+
+- **Sílabos → Momentos**: lee el sílabo y publica las páginas "Momento N" del curso (vista previa, lista de control, respaldo y restauración).
+- **Guías prácticas → tareas PAE**: crea en *Tareas → Actividades* la tarea `PAE#-Nombre de la guía` y una rúbrica con el mismo nombre, tomada de la rúbrica del momento y adaptada a la guía (opcionalmente con el modelo local Qwen).
+- **Historial de cargas** (botón 🕘 arriba a la derecha): registro de cada análisis y publicación, con correcciones manuales y exportación CSV. Sin `HISTORIAL_CLAVE` solo se abre con `HISTORIAL_LOCAL=1` en el propio equipo.
+
 ## Documentación
 
 - [Uso, arquitectura y configuración](sistema/README.md)

@@ -98,6 +98,9 @@ def _errores_estructura(b):
         cuerpo = ses.find('tbody')
         if cuerpo is not None and not cuerpo.find_all('tr', recursive=False):
             errores.append('sesiones: faltan filas modelo')
+        if len(filas) >= 2:   # las 6 columnas del modelo institucional son obligatorias (incluida "Enlaces")
+            tipos = [_clasificar(c.get_text(' ', strip=True)) for c in filas[1].find_all(['th', 'td'])]
+            errores += [f'sesiones: falta la columna "{nombre}"' for k, nombre in COLUMNAS_SESION if k not in tipos]
     rub = b['rubrica']
     if rub is not None:
         tabla = rub.find('table')
@@ -275,6 +278,27 @@ def _encabezado(soup, tabla, m, sil, proposito):
             td.append(NavigableString('\n            '))
 
 
+COLUMNAS_SESION = (('ses', 'Sesión'), ('doc', 'Actividades en contacto con el docente'),
+                   ('aut', 'Actividades de trabajo autónomo'), ('pe', 'Actividades práctico-experimentales'),
+                   ('cont', 'Contenidos'), ('enl', 'Enlaces'))
+MARCA_ENLACE = '(Pegar enlace)'
+
+
+def _enlaces_existentes(filas, cols):
+    """Contenido que el docente ya puso en la columna Enlaces de cada sesión (se conserva al volver a publicar)."""
+    if 'enl' not in cols:
+        return []
+    k = cols.index('enl')
+    out = []
+    for f in filas:
+        celdas = f.find_all(['th', 'td'], recursive=False)
+        c = celdas[k] if k < len(celdas) else None
+        txt = c.get_text(' ', strip=True) if c is not None else ''
+        util = c is not None and (c.find('a') is not None or (txt and txt != MARCA_ENLACE and not re.fullmatch(r'\(.*\)', txt)))
+        out.append([copy.copy(x) for x in c.contents] if util else None)
+    return out
+
+
 def _clasificar(cab):
     c = cab.lower()
     for k, pat in (('ses', 'sesi'), ('doc', 'docente'), ('aut', 'autónomo'), ('pe', 'práctico'),
@@ -315,6 +339,7 @@ def _sesiones(soup, tabla, m):
     if not filas:
         raise PlantillaInvalida('La tabla de sesiones no tiene filas modelo.')
     modelo_mid, modelo_ult = filas[0], filas[-1]
+    previos = _enlaces_existentes(filas, cols)
     for f in filas:
         f.extract()
     tbody.clear()
@@ -343,7 +368,12 @@ def _sesiones(soup, tabla, m):
             elif k == 'cont':
                 _set_text(celda, '• ' + s['cont'])
             elif k == 'enl':
-                _set_text(celda, '(Pegar enlace)')
+                if i < len(previos) and previos[i]:
+                    celda.clear()
+                    for x in previos[i]:
+                        celda.append(copy.copy(x))
+                else:
+                    _set_text(celda, MARCA_ENLACE)
         tbody.append(NavigableString('\n        '))
         tbody.append(tr)
     tbody.append(NavigableString('\n    '))

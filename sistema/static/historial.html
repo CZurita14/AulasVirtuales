@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial de cargas</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480;--ok:#1e7b4f;--warn:#a6480c;--bad:#b42318}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  .hder{display:flex;gap:14px;align-items:center} .hder a{color:#fff;opacity:.9;font-size:13.5px}
+  .hist{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:12.5px;border-radius:16px;padding:4px 11px;background:#fff;color:var(--m)!important;font-weight:600;opacity:1!important}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--m2)} .sub{margin:0 0 14px;color:var(--mut);font-size:14px}
+  .filtros{display:grid;grid-template-columns:170px 1fr 1fr 170px;gap:10px;margin-bottom:12px}
+  select,input{width:100%;border:1px solid #cfc6dd;border-radius:8px;padding:8px 10px;font:inherit;font-size:13.5px;background:#fff}
+  .resumen{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .kpi{background:#f7f3fb;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--mut)} .kpi b{display:block;font-size:18px;color:var(--m2)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#F7F3FB;color:var(--m);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr.fila{cursor:pointer} tr.fila:hover td{background:#fcfaff}
+  .chip{display:inline-block;border-radius:20px;padding:2px 9px;font-size:11.5px;margin:1px 3px 1px 0;white-space:nowrap}
+  .s{background:#f1ecf8;color:var(--m)} .g{background:#fff1e6;color:var(--warn)}
+  .ok{background:#e7f5ee;color:var(--ok)} .error{background:#fde8e6;color:var(--bad)} .avisos{background:#fdf0e7;color:var(--warn)}
+  .rec{background:#fff3c4;color:#6b4e00;border:1px dashed #c9a227} .man{background:#e8f0ff;color:#1d4ed8}
+  .mut{color:var(--mut);font-size:12px}
+  .nota-c{font-size:12px;color:#1d4ed8;margin-top:3px;font-style:italic}
+  .tachado{text-decoration:line-through}
+  button,.btn{font:inherit;font-size:13.5px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--m);background:#fff;color:var(--m);text-decoration:none;display:inline-block}
+  button.pri{background:var(--m);color:#fff}
+  .mini{font-size:11.5px;padding:2px 9px;border-radius:6px;margin-top:4px}
+  .ed{background:#f7f3fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .edg{display:grid;grid-template-columns:260px 1fr;gap:10px;margin:8px 0}
+  .ed label{display:block;font-size:12px;font-weight:600;color:var(--m2);margin-bottom:3px}
+  .det{background:#fcfaff;font-size:12.5px}
+  .det ul{margin:4px 0 0;padding-left:18px}
+  .pie{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap}
+  .err{border-left:4px solid var(--bad);background:#fff4f3;color:var(--bad);padding:10px 12px;border-radius:6px;margin:12px 0;font-size:14px}
+  .vacio{padding:30px;text-align:center;color:var(--mut)}
+  a{color:var(--m)}
+  .hidden{display:none}
+  @media(max-width:860px){.filtros,.edg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Historial</h1><small>Registro de todo lo que has cargado</small></div>
+  <div class="hder"><a href="./">← Menú principal</a><a class="hist" href="historial" aria-current="page">🕘 Historial</a></div>
+</header>
+<div class="wrap">
+  <section class="card">
+    <h2>Historial de cargas</h2>
+    <p class="sub">Todo lo que se ha analizado y publicado con el sistema en este equipo. No se guarda el token ni el PDF.
+      Las filas <span class="chip rec">reconstruido</span> son lo que se cargó antes de que existiera el historial.</p>
+    <div id="clavebox" class="hidden ed" style="margin-bottom:12px">
+      <label for="clave">Clave del historial</label>
+      <div style="display:flex;gap:8px"><input type="password" id="clave" autocomplete="off"><button class="pri" id="bclave">Entrar</button></div>
+    </div>
+    <div id="error" class="err hidden"></div>
+    <div class="resumen" id="kpis"></div>
+    <div class="filtros">
+      <select id="ftipo" aria-label="Tipo"><option value="">Todo</option><option value="silabos">Sílabos</option><option value="guias">Guías prácticas</option></select>
+      <select id="fcurso" aria-label="Curso"><option value="">Todos los cursos</option></select>
+      <input id="fq" placeholder="Buscar por nombre del sílabo o de la guía…" aria-label="Buscar">
+      <select id="forden" aria-label="Orden"><option value="desc">Más reciente primero</option><option value="asc">Más antiguo primero</option></select>
+    </div>
+    <div style="overflow-x:auto"><table id="tabla"></table></div>
+    <div class="pie"><span class="mut">Haz clic en una fila para ver el detalle.</span><button class="btn" id="bcsv" type="button">⬇ Exportar CSV</button></div>
+  </section>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const base = new URL('./', location.href);
+const api = p => new URL(p, base).href;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RES = {ok: '✔ Correcto', error: '✘ Error', avisos: '⚠ Con avisos'};
+const RES_SEL = {ok: '✔ Publicado / creado / correcto', error: '✘ No se publicó / falló', avisos: '⚠ Publicado con avisos aceptados'};
+let clave = '', abierta = null, editando = null, eventos = [];
+try { clave = sessionStorage.getItem('historial_clave') || ''; } catch (e) {}
+
+function fecha(f) {
+  const m = /^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d:\d\d))?/.exec(f || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}${m[4] ? ' ' + m[4] : ''}` : esc(f);
+}
+async function pedir(url, opts = {}) {
+  opts.headers = Object.assign({'X-Historial-Clave': clave}, opts.headers || {});
+  const r = await fetch(api(url), opts);
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (r.status === 401) { $('clavebox').classList.remove('hidden'); throw new Error(j.detail || 'Falta la clave del historial.'); }
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'Error ' + r.status);
+  return j;
+}
+function params() {
+  const p = new URLSearchParams();
+  if ($('ftipo').value) p.set('tipo', $('ftipo').value);
+  if ($('fcurso').value) p.set('curso', $('fcurso').value);
+  if ($('fq').value.trim()) p.set('q', $('fq').value.trim());
+  p.set('orden', $('forden').value);
+  return p;
+}
+async function cargar() {
+  $('error').classList.add('hidden');
+  try {
+    const j = await pedir('api/historial?' + params());
+    eventos = j.eventos;
+    const r = j.resumen;
+    $('kpis').innerHTML = `<div class="kpi"><b>${r.eventos}</b>eventos</div><div class="kpi"><b>${r.cursos}</b>cursos</div>` +
+      `<div class="kpi"><b>${r.publicaciones}</b>publicaciones</div><div class="kpi"><b>${r.errores}</b>con error</div>`;
+    const sel = $('fcurso').value;
+    $('fcurso').innerHTML = '<option value="">Todos los cursos</option>' +
+      j.cursos.map(c => `<option value="${esc(c.id)}" ${c.id === sel ? 'selected' : ''}>${esc(c.nombre || 'Curso')} (${esc(c.id)})</option>`).join('');
+    pintar();
+  } catch (e) { $('error').textContent = e.message; $('error').classList.remove('hidden'); }
+}
+function resultado(e) {
+  const c = e.correccion;
+  const rec = e.reconstruido ? ' <span class="chip rec">reconstruido</span>' : '';
+  if (!c) return `<span class="chip ${e.resultado}">${RES[e.resultado]}</span>${rec}` +
+    (e.detalle && e.resultado !== 'ok' ? `<div class="mut">${esc(e.detalle)}</div>` : '') +
+    (e.fuente ? `<div class="mut">Fuente: ${esc(e.fuente)}</div>` : '');
+  return `<span class="chip ${c.resultado}">${RES[c.resultado]}</span> <span class="chip man">✎ corregido a mano</span>${rec}` +
+    `<div class="mut"><span class="tachado">${RES[e.resultado]}${e.detalle ? ': ' + esc(e.detalle) : ''}</span> (registro original)</div>` +
+    (c.nota ? `<div class="nota-c">“${esc(c.nota)}” — corregido el ${fecha(c.fecha)}</div>` : `<div class="nota-c">corregido el ${fecha(c.fecha)}</div>`);
+}
+function pintar() {
+  if (!eventos.length) { $('tabla').innerHTML = '<tr><td class="vacio">Todavía no hay registros con estos filtros.</td></tr>'; return; }
+  $('tabla').innerHTML = '<tr><th>Fecha</th><th>Tipo</th><th>Archivo(s)</th><th>Curso</th><th>Acción</th><th>Resultado</th></tr>' +
+    eventos.map(e => {
+      const arch = e.archivos.length ? e.archivos.map(esc).join('<br>') : '<i class="mut">nombre no registrado</i>';
+      const curso = e.curso_id ? `${esc(e.curso_nombre || 'Curso')}<div class="mut">${esc(e.curso_id)}</div>` : '<i class="mut">no registrado</i>';
+      const enl = e.enlaces.length ? '<br>' + e.enlaces.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(x.texto)} ↗</a>`).join(' · ') : '';
+      let html = `<tr class="fila" data-id="${e.id}"><td>${fecha(e.fecha)}</td>
+        <td><span class="chip ${e.tipo === 'silabos' ? 's' : 'g'}">${e.tipo === 'silabos' ? 'Sílabos' : 'Guías'}</span></td>
+        <td>${arch}</td><td>${curso}</td><td>${esc(e.accion)}${enl}</td>
+        <td>${resultado(e)}<br><button class="mini" data-corr="${e.id}">✎ Corregir</button>${e.correccion ? ` <button class="mini" data-quitar="${e.id}">Quitar corrección</button>` : ''}</td></tr>`;
+      if (abierta === e.id) html += `<tr class="det"><td colspan="6"><b>Detalle</b>
+        <ul><li>Acción: ${esc(e.accion)}</li>${e.detalle ? `<li>${esc(e.detalle)}</li>` : ''}
+        ${e.archivos.length ? `<li>Archivos: ${e.archivos.map(esc).join(', ')}</li>` : ''}
+        ${e.enlaces.map(x => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.texto)}</a> — ${esc(x.url)}</li>`).join('')}
+        ${e.fuente ? `<li>Fuente: ${esc(e.fuente)}</li>` : ''}</ul></td></tr>`;
+      if (editando === e.id) html += `<tr><td colspan="6"><div class="ed"><b>Corregir el resultado de este registro</b>
+        <div class="edg"><div><label for="cres">Resultado real</label><select id="cres">${Object.entries(RES_SEL).map(([k, v]) =>
+          `<option value="${k}" ${(e.correccion ? e.correccion.resultado : (e.resultado === 'ok' ? 'error' : 'ok')) === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div><label for="cnota">Nota (por qué lo corriges)</label><input id="cnota" maxlength="500" value="${esc(e.correccion ? e.correccion.nota : '')}" placeholder="Ej.: Acepté los avisos y lo publiqué; quedó bien en Canvas."></div></div>
+        <div class="mut">El registro original no se borra: queda tachado debajo, con la fecha de tu corrección.</div>
+        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end"><button class="mini" id="ccancel">Cancelar</button><button class="mini pri" id="cguardar">Guardar corrección</button></div>
+        </div></td></tr>`;
+      return html;
+    }).join('');
+  $('tabla').querySelectorAll('tr.fila').forEach(tr => tr.onclick = () => { const id = +tr.dataset.id; abierta = abierta === id ? null : id; pintar(); });
+  $('tabla').querySelectorAll('[data-corr]').forEach(b => b.onclick = ev => { ev.stopPropagation(); editando = +b.dataset.corr; pintar(); $('cnota') && $('cnota').focus(); });
+  $('tabla').querySelectorAll('[data-quitar]').forEach(b => b.onclick = async ev => {
+    ev.stopPropagation();
+    if (!confirm('¿Quitar tu corrección y volver al resultado registrado por el sistema?')) return;
+    try { await pedir(`api/historial/${b.dataset.quitar}/correccion`, {method: 'DELETE'}); cargar(); } catch (e) { alert(e.message); }
+  });
+  if ($('ccancel')) $('ccancel').onclick = () => { editando = null; pintar(); };
+  if ($('cguardar')) $('cguardar').onclick = async () => {
+    try {
+      await pedir(`api/historial/${editando}/corregir`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resultado: $('cres').value, nota: $('cnota').value.trim()})});
+      editando = null; cargar();
+    } catch (e) { alert(e.message); }
+  };
+}
+$('bcsv').onclick = async () => {   // la clave va en la cabecera, nunca en la URL
+  try {
+    const p = params(); p.delete('orden');
+    const r = await fetch(api('api/historial.csv?' + p), {headers: {'X-Historial-Clave': clave}});
+    if (!r.ok) { let j = {}; try { j = await r.json(); } catch (e) {} throw new Error(j.detail || 'Error ' + r.status); }
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a'); a.href = url; a.download = 'historial_cargas.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (e) { alert(e.message); }
+};
+let espera;
+['ftipo', 'fcurso', 'forden'].forEach(id => $(id).onchange = cargar);
+$('fq').oninput = () => { clearTimeout(espera); espera = setTimeout(cargar, 300); };
+$('bclave').onclick = () => { clave = $('clave').value; try { sessionStorage.setItem('historial_clave', clave); } catch (e) {} $('clavebox').classList.add('hidden'); cargar(); };
+(async () => {
+  try {
+    const est = await (await fetch(api('api/historial/estado'))).json();
+    if (!est.habilitado) { $('error').textContent = 'El historial está desactivado en este servidor.'; $('error').classList.remove('hidden'); return; }
+    if (est.requiere_clave && !clave) { $('clavebox').classList.remove('hidden'); return; }
+  } catch (e) {}
+  cargar();
+})();
+</script>
+</body>
+</html>

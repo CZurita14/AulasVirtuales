@@ -278,6 +278,28 @@ def test_momento_sin_pagina_no_se_publica(monkeypatch):
     assert p['3']['ok'] is False and 'momento-3' not in m.puts and len(m.puts) == 3
 
 
+def test_localiza_paginas_cuando_canvas_omite_los_items_del_modulo(monkeypatch):
+    mock = MockCanvas(plantilla_body=render.leer_plantilla_institucional())
+    mock.paginas['inicio']['body'] = '<p>Sin enlaces</p>'
+    def handler(req):
+        path = req.url.path
+        if path.endswith('/modules'):
+            return httpx.Response(200, json=[
+                dict(id=m['id'], name=m['name'], items_count=len(m['items'])) for m in mock.modulos
+            ])
+        for m in mock.modulos:
+            if path.endswith(f"/modules/{m['id']}/items"):
+                return httpx.Response(200, json=m['items'])
+        if path.endswith('/pages'):
+            return httpx.Response(200, json=[])
+        return mock.handler(req)
+    monkeypatch.setattr(appmod, 'TRANSPORT', httpx.MockTransport(handler))
+    j = analizar().json()
+    assert set(j['destinos']) == {'1', '2', '3', '4'}
+    assert all(d['fuente'] == 'módulo' for d in j['destinos'].values())
+    assert mock.puts == []
+
+
 def test_localiza_por_modulo_si_el_inicio_no_enlaza(monkeypatch):
     m = MockCanvas(plantilla_body=render.leer_plantilla_institucional())
     m.paginas['inicio']['body'] = '<p>Sin mosaicos</p>'
@@ -288,7 +310,7 @@ def test_localiza_por_modulo_si_el_inicio_no_enlaza(monkeypatch):
 
 
 def test_pagina_principal():
-    r = client.get('/')
+    r = client.get('/silabos')
     assert r.status_code == 200 and 'Token de acceso de Canvas' in r.text
     for texto in ('Revisar también con la IA de la universidad', 'Segunda lectura (IA)', 'Volver al inicio', 'Cargar otro curso'):
         assert texto in r.text, texto

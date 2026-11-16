@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Historial</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480;--ok:#1e7b4f;--warn:#a6480c;--bad:#b42318}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  .mock{background:#fff3c4;color:#6b4e00;font-size:12.5px;padding:6px 28px;border-bottom:1px solid #f0dc8a;display:flex;gap:14px;align-items:center}
+  .mock button{font:inherit;font-size:12px;padding:3px 10px;border-radius:6px;border:1px solid #c9a227;background:#fff;cursor:pointer}
+  .mock button.on{background:#c9a227;color:#fff}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  .hder{display:flex;gap:14px;align-items:center}
+  .hist{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:12.5px;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:4px 11px;background:rgba(255,255,255,.08);cursor:pointer}
+  .hist:hover{background:rgba(255,255,255,.18)}
+  .hist.on{background:#fff;color:var(--m);font-weight:600}
+  .menulink{color:#fff;opacity:.9;font-size:13.5px}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  .menu{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .opt{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px}
+  .opt h2{margin:10px 0 6px;color:var(--m2);font-size:19px} .opt p{margin:0;color:var(--mut);font-size:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--m2)} .sub{margin:0 0 14px;color:var(--mut);font-size:14px}
+  .filtros{display:grid;grid-template-columns:160px 1fr 1fr 150px;gap:10px;margin-bottom:12px}
+  select,input{width:100%;border:1px solid #cfc6dd;border-radius:8px;padding:8px 10px;font:inherit;font-size:13.5px;background:#fff}
+  .resumen{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .kpi{background:#f7f3fb;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--mut)} .kpi b{display:block;font-size:18px;color:var(--m2)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#F7F3FB;color:var(--m);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .chip{display:inline-block;border-radius:20px;padding:2px 9px;font-size:11.5px;margin:1px 3px 1px 0;white-space:nowrap}
+  .s{background:#f1ecf8;color:var(--m)} .g{background:#fff1e6;color:var(--warn)}
+  .ok{background:#e7f5ee;color:var(--ok)} .bad{background:#fde8e6;color:var(--bad)} .rec{background:#fff3c4;color:#6b4e00;border:1px dashed #c9a227}
+  .mut{color:var(--mut);font-size:12px}
+  a{color:var(--m)}
+  .hidden{display:none}
+  .man{background:#e8f0ff;color:#1d4ed8}
+  .nota-c{font-size:12px;color:#1d4ed8;margin-top:3px;font-style:italic}
+  .mini{font:inherit;font-size:11.5px;padding:2px 9px;border-radius:6px;border:1px solid var(--m);background:#fff;color:var(--m);cursor:pointer;margin-top:4px}
+  .mini.pri{background:var(--m);color:#fff}
+  .ed{background:#f7f3fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .edg{display:grid;grid-template-columns:240px 1fr;gap:10px;margin:8px 0}
+  .ed label{display:block;font-size:12px;font-weight:600;color:var(--m2);margin-bottom:3px}
+  .nota{font-size:12.5px;color:var(--mut);margin-top:10px}
+  @media(max-width:860px){.menu,.filtros{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="mock">MOCKUP (no funcional) — ver:
+  <button id="b1" class="on" onclick="ver(1)">1. Menú con el botón</button>
+  <button id="b2" onclick="ver(2)">2. Página Historial</button>
+  <span>Las filas con <span class="chip rec">reconstruido</span> son la siembra de lo que ya cargamos.</span>
+</div>
+
+<header>
+  <div><h1 id="t">Sílabo → Aula virtual</h1><small id="st">Carga tu sílabo y tus guías prácticas en tu curso de Canvas</small></div>
+  <div class="hder">
+    <a class="menulink hidden" id="vmenu" onclick="ver(1)">← Menú principal</a>
+    <a class="hist" id="bh" onclick="ver(2)" title="Ver todo lo que se ha cargado">🕘 Historial</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Vista 1: menú -->
+  <section id="v1">
+    <p style="color:var(--mut);margin:0 0 18px">¿Qué quieres cargar en tu curso?</p>
+    <div class="menu">
+      <div class="opt"><div style="font-size:30px">📘</div><h2>Sílabos</h2><p>Carga los Momentos del sílabo en las páginas de tu curso.</p></div>
+      <div class="opt"><div style="font-size:30px">🧪</div><h2>Guías prácticas</h2><p>Crea las tareas PAE y sus rúbricas a partir de tus guías.</p></div>
+    </div>
+    <p class="nota">El botón <b>🕘 Historial</b> aparece en la esquina superior derecha de las tres pantallas (menú, Sílabos y Guías prácticas).
+      En Sílabos y Guías queda al lado de "← Menú principal".</p>
+  </section>
+
+  <!-- Vista 2: historial -->
+  <section id="v2" class="hidden">
+    <div class="card">
+      <h2>Historial de cargas</h2>
+      <p class="sub">Todo lo que se ha analizado y publicado con el sistema en este equipo. No se guarda el token ni el PDF.</p>
+      <div class="resumen">
+        <div class="kpi"><b>9</b>eventos</div>
+        <div class="kpi"><b>3</b>cursos</div>
+        <div class="kpi"><b>6</b>publicaciones</div>
+        <div class="kpi"><b>1</b>con error</div>
+      </div>
+      <div class="filtros">
+        <select><option>Todo</option><option>Sílabos</option><option>Guías prácticas</option></select>
+        <select><option>Todos los cursos</option><option>B26-MED-1 Computación y Sociedad P02 (36732)</option><option>Curso 36283</option></select>
+        <input placeholder="Buscar por nombre del sílabo o de la guía…">
+        <select><option>Más reciente primero</option><option>Más antiguo primero</option></select>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <tr><th>Fecha</th><th>Tipo</th><th>Archivo(s)</th><th>Curso</th><th>Acción</th><th>Resultado</th></tr>
+
+        <tr><td>14/11/2026 10:42</td><td><span class="chip g">Guías</span></td>
+          <td>G5 reporte_guias_laboratorio…172354.pdf<br>G6 reporte_guias_laboratorio…172429.pdf</td>
+          <td>Curso 36283<br><span class="mut">PROGRAMACION ESTRUCTURADA</span></td>
+          <td>PAE creadas: PAE5, PAE6<br><a href="#">Abrir PAE5 ↗</a> · <a href="#">Abrir PAE6 ↗</a></td>
+          <td><span class="chip ok">✔ Creadas y verificadas</span><div class="mut">Ejemplo de fila nueva (automática)</div></td></tr>
+
+        <tr><td>12/11/2026 18:05</td><td><span class="chip s">Sílabos</span></td><td><i class="mut">nombre no registrado</i></td><td><i class="mut">no registrado</i></td>
+          <td>Publicado</td><td><span class="chip ok">✔ Correcto</span> <span class="chip rec">reconstruido</span><div class="mut">Fuente: registro de Docker</div></td></tr>
+        <tr><td>12/11/2026 18:04</td><td><span class="chip s">Sílabos</span></td><td><i class="mut">nombre no registrado</i></td><td><i class="mut">no registrado</i></td>
+          <td>Publicar</td><td><span class="chip bad">✘ Rechazado (vista previa desactualizada)</span> <span class="chip rec">reconstruido</span>
+            <br><button class="mini" onclick="editar(this)">✎ Corregir</button></td></tr>
+        <tr><td>12/11/2026 18:02</td><td><span class="chip s">Sílabos</span></td><td><i class="mut">nombre no registrado</i></td><td><i class="mut">no registrado</i></td>
+          <td>Publicado</td><td><span class="chip ok">✔ Correcto</span> <span class="chip rec">reconstruido</span></td></tr>
+        <tr><td>12/11/2026 18:01</td><td><span class="chip s">Sílabos</span></td><td><i class="mut">nombre no registrado</i></td><td><i class="mut">no registrado</i></td>
+          <td>Publicado</td><td><span class="chip ok">✔ Correcto</span> <span class="chip rec">reconstruido</span></td></tr>
+        <tr><td>12/11/2026 17:59</td><td><span class="chip g">Guías</span></td><td>G1–G6 reporte_guias_laboratorio… <span class="mut">(probable, por tu carpeta Descargas)</span></td><td><i class="mut">no registrado</i></td>
+          <td>PAE creadas</td><td><span class="chip ok">✔ Correcto</span> <span class="chip rec">reconstruido</span><div class="mut">Fuente: registro de Docker + Descargas</div></td></tr>
+        <tr><td>11/11/2026</td><td><span class="chip g">Guías</span></td><td>Guías N° 1–4 de Programación Estructurada</td><td>Curso 36283</td>
+          <td>Publicar PAE1–PAE4</td>
+          <td><span class="chip ok">✔ Publicado</span> <span class="chip man">✎ corregido a mano</span> <span class="chip rec">reconstruido</span>
+            <div class="mut"><s>✘ Bloqueado: cambios sin vista previa</s> (registro original)</div>
+            <div class="nota-c">“Se volvió a generar la vista previa y se publicaron las 4 PAE.” — corregido el 14/11/2026 10:50</div>
+            <button class="mini" onclick="editar(this)">✎ Corregir</button></td></tr>
+        <tr class="hidden" id="editor"><td colspan="6">
+          <div class="ed">
+            <b>Corregir el resultado de este registro</b>
+            <div class="edg">
+              <div><label>Resultado real</label><select><option>✔ Publicado / creado</option><option>✘ No se publicó</option><option>⚠ Publicado con avisos aceptados</option></select></div>
+              <div><label>Nota (por qué lo corriges)</label><input value="Acepté los avisos y lo publiqué; quedó bien en Canvas."></div>
+            </div>
+            <div class="mut">El registro original no se borra: queda tachado debajo, con la fecha de tu corrección. Puedes deshacer la corrección.</div>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end"><button class="mini" onclick="editar()">Cancelar</button><button class="mini pri" onclick="editar()">Guardar corrección</button></div>
+          </div></td></tr>
+        <tr><td>06/11/2026</td><td><span class="chip s">Sílabos</span></td><td>silabo_pf20261106_165315med-paral_02.pdf</td><td>B26-MED-1 Computación y Sociedad P02 (36732)</td>
+          <td>Publicado Momentos 1–4</td><td><span class="chip ok">✔ 4/4 publicadas y verificadas</span> <span class="chip rec">reconstruido</span><div class="mut">Fuente: progress.md</div></td></tr>
+        <tr><td>06/11/2026</td><td><span class="chip s">Sílabos</span></td><td>B26_Software_Programacion Estructurada.pdf</td><td>Curso 36283</td>
+          <td>Momento 1 aprobado (con el prompt maestro, antes del sistema)</td><td><span class="chip ok">✔ Aprobado</span> <span class="chip rec">reconstruido</span><div class="mut">Fuente: progress.md</div></td></tr>
+      </table>
+      </div>
+      <p class="nota">Al hacer clic en una fila se despliega el detalle: momentos o PAE involucrados, avisos que tuvo, y enlaces a cada página o tarea en Canvas.
+        Botón <b>⬇ Exportar CSV</b> abajo a la derecha para llevarlo a Excel.</p>
+    </div>
+  </section>
+</div>
+<script>
+function editar(b){
+  const e=document.getElementById('editor');
+  if(!b){e.classList.add('hidden');return;}
+  b.closest('tr').after(e); e.classList.remove('hidden');
+}
+function ver(n){
+  document.getElementById('v1').classList.toggle('hidden',n!==1);
+  document.getElementById('v2').classList.toggle('hidden',n!==2);
+  document.getElementById('b1').classList.toggle('on',n===1);
+  document.getElementById('b2').classList.toggle('on',n===2);
+  document.getElementById('bh').classList.toggle('on',n===2);
+  document.getElementById('vmenu').classList.toggle('hidden',n!==2);
+  document.getElementById('t').textContent=n===2?'Historial':'Sílabo → Aula virtual';
+  document.getElementById('st').textContent=n===2?'Registro de todo lo que has cargado':'Carga tu sílabo y tus guías prácticas en tu curso de Canvas';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guías prácticas → Tareas PAE</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480;--ok:#1e7b4f;--warn:#a6480c;--bad:#b42318}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  header a{color:#fff;opacity:.9;font-size:13.5px}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  .steps{display:flex;gap:8px;margin-bottom:22px}
+  .step{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;color:var(--mut);font-size:14px}
+  .step b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--line);color:var(--mut);flex:none}
+  .step.on{border-color:var(--m);color:var(--m);font-weight:600} .step.on b{background:var(--m);color:#fff} .step.done b{background:var(--ok);color:#fff}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--m2)} .card .sub{margin:0 0 16px;color:var(--mut);font-size:14px}
+  .card h3{font-size:15px;color:var(--m2);margin:18px 0 8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  label{display:block;font-weight:600;font-size:14px;margin:0 0 6px;color:var(--m2)}
+  .hint{font-size:12.5px;color:var(--mut);margin-top:6px}
+  input[type=text],input[type=password],input[type=number],input[type=date],textarea,select{width:100%;border:1px solid #cfc6dd;border-radius:8px;padding:9px 11px;font:inherit;font-size:14px;background:#fff}
+  .drop{border:2px dashed #cfc6dd;border-radius:10px;padding:18px;text-align:center;color:var(--mut);cursor:pointer;background:#FCFAFE;font-size:14px}
+  .drop.over{border-color:var(--m);background:#f1ecf8} .drop.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:#f1faf5}
+  .chip{display:inline-flex;gap:6px;align-items:center;background:#f1ecf8;color:var(--m);border-radius:20px;padding:3px 10px;font-size:12px;margin:3px 4px 0 0}
+  .chip.ok{background:#e7f5ee;color:var(--ok)} .chip.w{background:#fdf0e7;color:var(--warn)} .chip.bad{background:#fde8e6;color:var(--bad)} .chip.ia{background:#eef4ff;color:#1d4ed8}
+  .btns{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:8px;flex-wrap:wrap}
+  button{font:inherit;font-size:14px;border-radius:8px;padding:10px 18px;cursor:pointer;border:1px solid var(--m);background:#fff;color:var(--m)}
+  button.pri{background:var(--m);color:#fff} button.pri:hover{background:var(--m2)} button:disabled{opacity:.45;cursor:not-allowed}
+  button.sm{padding:5px 10px;font-size:12.5px}
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.t th{background:#F7F3FB;color:var(--m);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .warn{border-left:4px solid var(--o);background:#fff8f2;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13.5px} .warn b{color:var(--warn)}
+  .warn.grave{border-left-color:var(--bad);background:#fff4f3} .warn.grave b{color:var(--bad)}
+  .info{border-left:4px solid var(--m);background:#f7f3fb;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13.5px}
+  .err{border-left:4px solid var(--bad);background:#fff4f3;color:var(--bad);padding:10px 12px;border-radius:6px;margin:12px 0;font-size:14px}
+  .okbox{border-left:4px solid var(--ok);background:#f1faf5;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13.5px}
+  .tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);flex-wrap:wrap;margin-bottom:12px}
+  .tab{padding:8px 14px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:#f1ecf8;color:var(--m);cursor:pointer;font-size:13.5px}
+  .tab.on{background:#fff;font-weight:600;border-color:var(--m);position:relative;top:2px}
+  .rub{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+  .rub th{background:#3A1467;color:#fff;padding:7px;font-weight:600;text-align:center}
+  .rub th:first-child{width:16%}
+  .rub th .pts{display:block;font-size:11px;font-weight:400;opacity:.85}
+  .rub td{border:1px solid var(--line);padding:4px;vertical-align:top}
+  .rub textarea{border:1px solid transparent;border-radius:6px;padding:6px;font-size:12.5px;min-height:118px;resize:vertical;line-height:1.4}
+  .rub textarea:focus{border-color:var(--m)}
+  .rub td.ind textarea{font-weight:600;color:var(--m2);min-height:70px}
+  .rub td.iac{background:#f3f7ff}
+  .rub .orig{font-size:11px;color:var(--mut);padding:2px 6px 4px;border-top:1px dashed var(--line)}
+  .check{padding:0;margin:0} .check li{list-style:none;margin:0 0 6px;font-size:13.5px}
+  .ok{color:var(--ok)} .no{color:var(--bad)} .av{color:var(--warn)}
+  .preview{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  iframe{width:100%;height:560px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .confirm{display:flex;gap:10px;align-items:flex-start;background:#fff8f2;border:1px solid #f3d3b8;border-radius:8px;padding:12px;font-size:14px;margin:14px 0}
+  .confirm input{margin-top:3px;width:18px;height:18px}
+  .hidden{display:none}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:g .7s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes g{to{transform:rotate(360deg)}}
+  .muted{color:var(--mut);font-size:12.5px}
+  .resul{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+  @media(max-width:860px){.grid2,.preview{grid-template-columns:1fr}.steps{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Guías prácticas → Tareas PAE</h1><small>Crea las tareas PAE y sus rúbricas en tu curso de Canvas</small></div>
+  <span style="display:flex;gap:14px;align-items:center"><a href="./" id="amenu">← Menú principal</a><a class="bhist" href="historial" title="Ver todo lo que se ha cargado" style="display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:12.5px;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:4px 11px;background:rgba(255,255,255,.08);opacity:1">🕘 Historial</a></span>
+</header>
+<div class="wrap">
+  <div class="steps">
+    <div class="step on" data-s="1"><b>1</b>Tus datos</div>
+    <div class="step" data-s="2"><b>2</b>Guías y momentos</div>
+    <div class="step" data-s="3"><b>3</b>Rúbrica adaptada</div>
+    <div class="step" data-s="4"><b>4</b>Vista previa</div>
+    <div class="step" data-s="5"><b>5</b>Publicar</div>
+  </div>
+
+  <!-- ================= PASO 1 ================= -->
+  <section class="card" id="p1">
+    <h2>1. Tus datos</h2>
+    <p class="sub">Del sílabo tomamos la rúbrica de cada momento; de cada guía, su contenido. Nada se crea en Canvas sin tu aprobación en el paso 5.</p>
+    <div class="grid2">
+      <div>
+        <label>Sílabo (PDF)</label>
+        <div class="drop" id="dsil" tabindex="0">📄 Arrastra tu sílabo aquí o haz clic para elegirlo</div>
+        <input type="file" id="fsil" accept="application/pdf" class="hidden">
+        <label style="margin-top:16px">Guías prácticas (PDF, una o varias)</label>
+        <div class="drop" id="dgui" tabindex="0">🧪 Arrastra tus guías aquí o haz clic para elegirlas</div>
+        <input type="file" id="fgui" accept="application/pdf" multiple class="hidden">
+        <div class="hint">El PDF que genera el sistema académico (formato FOR-GPFM). Un PDF puede traer varias guías.</div>
+      </div>
+      <div>
+        <label for="url">URL de tu curso en Canvas</label>
+        <input type="text" id="url" placeholder="https://indoamerica.instructure.com/courses/12345" autocomplete="off">
+        <div class="hint">Entra a tu curso y copia la barra de direcciones.</div>
+        <label for="tok" style="margin-top:16px">Token de acceso de Canvas</label>
+        <input type="password" id="tok" placeholder="Pega aquí tu token" autocomplete="off">
+        <div class="hint">Canvas: Cuenta → Configuraciones → "Nuevo token de acceso". Se usa solo en esta sesión; no se guarda.</div>
+        <label class="confirm" style="margin-top:14px;background:#f7f3fb;border-color:var(--line)"><input type="checkbox" id="usaria" checked>
+          <span><b>Adaptar la rúbrica con la IA de la universidad (Qwen)</b><br><span class="muted">Qwen ajusta los descriptores a cada guía; lo que no cumpla las reglas se queda con el texto del sílabo.</span></span></label>
+      </div>
+    </div>
+    <div id="e1" class="err hidden"></div>
+    <div class="btns"><a href="./"><button type="button">← Menú</button></a><button class="pri" id="banal" disabled>Analizar →</button></div>
+  </section>
+
+  <!-- ================= PASO 2 ================= -->
+  <section class="card hidden" id="p2">
+    <h2>2. Guías y momentos</h2>
+    <p class="sub" id="sub2"></p>
+    <div id="adv2"></div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div><label for="grupo">Grupo de tareas donde se crean las PAE</label><select id="grupo"></select></div>
+      <div><label>Secuencia de PAE en tu curso</label><div id="secu"></div></div>
+    </div>
+    <div style="overflow-x:auto"><table class="t" id="tguias"></table></div>
+    <div class="btns"><button id="atras2">← Atrás</button><button class="pri" id="sig2">Siguiente: rúbrica →</button></div>
+  </section>
+
+  <!-- ================= PASO 3 ================= -->
+  <section class="card hidden" id="p3">
+    <h2>3. Rúbrica adaptada</h2>
+    <p class="sub">Base: la rúbrica del momento en el sílabo (mismos indicadores y 5 niveles). Puedes editar cualquier celda; las celdas azules las redactó Qwen y debajo ves el texto original del sílabo.</p>
+    <div class="tabs" id="tabs3"></div>
+    <div id="iaglobal"></div>
+    <div id="iaest"></div>
+    <div style="overflow-x:auto"><table class="rub" id="trub"></table></div>
+    <div class="btns">
+      <button id="atras3">← Atrás</button>
+      <span><button id="bia" class="hidden">✦ Adaptar con Qwen</button> <button id="bsil">↺ Volver a la rúbrica del sílabo</button>
+        <button class="pri" id="sig3">Vista previa →</button></span>
+    </div>
+  </section>
+
+  <!-- ================= PASO 4 ================= -->
+  <section class="card hidden" id="p4">
+    <h2>4. Vista previa</h2>
+    <p class="sub">Así se verá la tarea para el estudiante. La rúbrica se crea con el mismo nombre y se asocia a la tarea para calificar.</p>
+    <div class="tabs" id="tabs4"></div>
+    <div class="preview">
+      <div><iframe id="frame" sandbox="" title="Vista previa de la tarea"></iframe></div>
+      <div><h3 style="margin-top:0">Lista de control</h3><ul class="check" id="ctrl"></ul><div id="resumen4" class="info"></div></div>
+    </div>
+    <div class="btns"><button id="atras4">← Atrás</button><button class="pri" id="sig4">Ir a publicar →</button></div>
+  </section>
+
+  <!-- ================= PASO 5 ================= -->
+  <section class="card hidden" id="p5">
+    <h2>5. Publicar en Canvas</h2>
+    <p class="sub" id="sub5"></p>
+    <table class="t" id="tpub"></table>
+    <label class="confirm"><input type="checkbox" id="conf"> <span>Revisé las rúbricas y la vista previa; autorizo crear estas tareas (sin publicar) y sus rúbricas en mi curso.</span></label>
+    <div id="e5" class="err hidden"></div>
+    <div class="btns"><button id="atras5">← Atrás</button><button class="pri" id="bpub" disabled>Crear en Canvas</button></div>
+    <div id="res5"></div>
+    <div class="btns" id="fin5">
+      <button id="bfin">Terminar y borrar datos</button>
+      <span><button id="botro">Cargar otras guías</button> <a href="./"><button type="button">← Menú principal</button></a></span>
+    </div>
+    <div id="finnota" class="muted"></div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const appBase = new URL('./', location.href);
+const api = p => new URL(p.replace(/^\/+/, ''), appBase).href;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let fsil = null, fgui = [], R = null, V = null, cur3 = 0, cur4 = 0, sucio = true;
+
+function paso(n) {
+  for (let k = 1; k <= 5; k++) $('p' + k).classList.toggle('hidden', k !== n);
+  document.querySelectorAll('.step').forEach(s => { const k = +s.dataset.s; s.classList.toggle('on', k === n); s.classList.toggle('done', k < n); });
+  window.scrollTo(0, 0);
+}
+async function pedir(url, opts) {
+  const r = await fetch(api(url), opts);
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'Error ' + r.status);
+  return j;
+}
+const post = (url, body) => pedir(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+
+// ---------------- Paso 1 ----------------
+function zona(drop, input, multi, alElegir) {
+  drop.onclick = () => input.click();
+  drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') input.click(); };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); alElegir([...e.dataTransfer.files].filter(f => /\.pdf$/i.test(f.name))); };
+  input.onchange = () => alElegir([...input.files]);
+}
+zona($('dsil'), $('fsil'), false, fs => { if (!fs.length) return; fsil = fs[0]; $('dsil').className = 'drop ok'; $('dsil').textContent = '✔ ' + fsil.name; listo1(); });
+zona($('dgui'), $('fgui'), true, fs => {
+  if (!fs.length) return;
+  for (const f of fs) if (!fgui.some(g => g.name === f.name)) fgui.push(f);
+  $('dgui').className = 'drop ok';
+  $('dgui').innerHTML = fgui.map(f => '✔ ' + esc(f.name)).join('<br>') + '<br><small>Haz clic para agregar más</small>';
+  listo1();
+});
+['url', 'tok'].forEach(id => $(id).oninput = listo1);
+function listo1() { $('banal').disabled = !(fsil && fgui.length && $('url').value.trim() && $('tok').value.trim()); }
+
+$('banal').onclick = async () => {
+  const b = $('banal'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Analizando…'; $('e1').classList.add('hidden');
+  const fd = new FormData();
+  fd.append('silabo', fsil); fgui.forEach(f => fd.append('guias', f));
+  fd.append('url', $('url').value.trim()); fd.append('token', $('tok').value.trim());
+  try {
+    R = await pedir('api/guias/analizar', {method: 'POST', body: fd});
+    $('tok').value = '';               // el token ya está en la sesión del servidor
+    pintar2(); paso(2);
+    if ($('usaria').checked && R.ia) adaptarTodas();
+  } catch (e) { $('e1').textContent = e.message; $('e1').classList.remove('hidden'); }
+  b.innerHTML = 'Analizar →'; listo1();
+};
+
+// ---------------- Paso 2 ----------------
+function pintar2() {
+  $('sub2').innerHTML = `Curso <b>${esc(R.curso.nombre)}</b> · sílabo <b>${esc(R.ficha.proyecto)}</b> (${esc(R.ficha.codigo)}). Cada guía se empareja con su momento por título y fechas y recibe su número de PAE.`;
+  $('adv2').innerHTML = R.advertencias.map(a => `<div class="warn ${a.grave ? 'grave' : ''}"><b>${esc(a.tipo)}:</b> ${esc(a.texto)}</div>`).join('');
+  $('grupo').innerHTML = (R.grupo_id ? '' : '<option value="">— elige un grupo —</option>') +
+    R.grupos.map(g => `<option value="${g.id}" ${g.id === R.grupo_id ? 'selected' : ''}>${esc(g.nombre)}</option>`).join('');
+  const s = R.secuencia;
+  $('secu').innerHTML = (s.existentes.length ? s.existentes.map(n => `<span class="chip">PAE${n} ya en el curso</span>`).join('') : '<span class="chip">Aún no hay PAE en el curso</span>') +
+    s.nuevas.map(n => `<span class="chip ok">PAE${n} nueva</span>`).join('') +
+    (s.faltan.length ? `<div class="warn"><b>Faltan:</b> ${s.faltan.map(n => 'PAE' + n).join(', ')}. Puedes subir esas guías ahora o continuar.</div>` : '');
+  const opts = sel => R.momentos.map(m => `<option value="${m.n}" ${m.n === sel ? 'selected' : ''}>Momento ${m.n}</option>`).join('');
+  $('tguias').innerHTML = '<tr><th>Crear</th><th>Guía</th><th>Momento del sílabo</th><th style="width:150px">Fechas</th><th>Nombre de la tarea</th><th style="width:90px">Puntos</th></tr>' +
+    R.items.map(it => {
+      const m = R.momentos.find(x => x.n === it.momento);
+      return `<tr>
+        <td><input type="checkbox" data-k="incluir" data-i="${it.i}" ${it.incluir ? 'checked' : ''}></td>
+        <td><b>N° ${esc(it.n)}</b><br><span class="muted">${esc(it.archivo)}<br>${esc(it.horas)} h · ${it.pasos} pasos</span></td>
+        <td><select data-k="momento" data-i="${it.i}">${it.momento ? '' : '<option value="">— elige —</option>'}${opts(it.momento)}</select>
+          <div class="muted" style="margin-top:4px">${m ? esc(m.titulo.slice(0, 90)) + '…' : ''}</div>
+          ${it.empareja.titulo ? '<span class="chip ok">título ✔</span>' : '<span class="chip w">título ✘</span>'}${it.empareja.fechas ? '<span class="chip ok">fechas ✔</span>' : '<span class="chip w">fechas ✘</span>'}
+          ${it.ra_en_guia ? '' : '<span class="chip w">RA del sílabo</span>'}</td>
+        <td><input type="date" data-k="inicio" data-i="${it.i}" value="${esc(it.inicio)}"><input type="date" data-k="fin" data-i="${it.i}" value="${esc(it.fin)}" style="margin-top:4px">
+          <div class="muted">Disponible desde 00:00 · entrega 23:59</div></td>
+        <td style="min-width:260px"><textarea rows="3" data-k="nombre" data-i="${it.i}" style="font-size:13.5px">${esc(it.nombre)}</textarea>
+          ${it.existe ? `<div class="warn grave"><b>Ya existe en el curso:</b> ${esc(it.existe.nombre)}. No se duplicará.</div>` : ''}
+          <label style="font-weight:400;font-size:12.5px;margin-top:6px"><input type="checkbox" data-k="modulo" data-i="${it.i}" ${it.modulo ? 'checked' : ''}> Agregar al módulo del momento</label></td>
+        <td><input type="number" min="1" step="0.5" data-k="puntos" data-i="${it.i}" value="${esc(it.puntos)}"></td></tr>`;
+    }).join('');
+  $('tguias').querySelectorAll('[data-k]').forEach(el => el.onchange = () => {
+    const it = R.items[+el.dataset.i], k = el.dataset.k;
+    it[k] = el.type === 'checkbox' ? el.checked : (k === 'puntos' ? +el.value : (k === 'momento' ? +el.value : el.value));
+    if (k === 'momento') it.cambio_momento = true;
+    sucio = true;
+  });
+  $('grupo').onchange = () => { R.grupo_id = $('grupo').value ? +$('grupo').value : null; sucio = true; };
+}
+$('atras2').onclick = () => paso(1);
+$('sig2').onclick = async () => {
+  if (R.items.some(it => it.cambio_momento)) {   // al cambiar de momento cambia la rúbrica base
+    try { await generar(); R.items.forEach(it => it.cambio_momento = false); } catch (e) { alert(e.message); return; }
+  }
+  cur3 = R.items.findIndex(it => it.incluir); if (cur3 < 0) cur3 = 0;
+  pintar3(); paso(3);
+};
+
+// ---------------- Paso 3 ----------------
+const iaEstado = {};
+const iaOcupada = () => Object.values(iaEstado).some(s => s.cargando);
+function estadoIA() {      // mientras Qwen trabaja no se puede generar la vista previa ni editar esa guía
+  const ocupada = iaOcupada();
+  $('sig3').disabled = ocupada; $('bia').disabled = ocupada; $('bsil').disabled = ocupada;
+  const pend = R ? R.items.filter(it => (iaEstado[it.i] || {}).cargando).map(it => 'PAE' + ((it.nombre.match(/^PAE\s*(\d+)/i) || [, it.n])[1])) : [];
+  $('iaglobal').innerHTML = ocupada ? `<div class="info"><span class="spin"></span>Qwen está adaptando las rúbricas (pendientes: ${esc(pend.join(', '))}). La vista previa se habilita cuando termine.</div>` : '';
+}
+async function adaptarTodas() {
+  const cola = R.items.filter(it => it.incluir && it.momento).map(it => it.i);
+  cola.forEach(i => iaEstado[i] = {cargando: true});
+  estadoIA();
+  for (const i of cola) await adaptar(i);
+}
+async function adaptar(i) {
+  iaEstado[i] = {cargando: true}; estadoIA(); if (cur3 === i) pintar3();
+  try {
+    const r = await post(`api/guias/adaptar/${encodeURIComponent(R.sid)}/${i}`, {});
+    iaEstado[i] = {ok: r.ok, msg: r.mensaje};
+    if (r.ok) { R.items[i].rubrica = r.rubrica; R.items[i].rubrica_origen = 'ia'; sucio = true; }
+  } catch (e) { iaEstado[i] = {ok: false, msg: e.message}; }
+  estadoIA(); pintar3();
+}
+function tabs(el, actual, fn) {
+  el.innerHTML = R.items.map(it => `<div class="tab ${it.i === actual ? 'on' : ''}" data-i="${it.i}">PAE${esc((it.nombre.match(/^PAE\s*(\d+)/i) || [, it.n])[1])}${it.incluir ? '' : ' (no se crea)'}${(iaEstado[it.i] || {}).cargando ? ' ⏳' : ''}</div>`).join('');
+  el.querySelectorAll('.tab').forEach(t => t.onclick = () => fn(+t.dataset.i));
+}
+function pintar3() {
+  tabs($('tabs3'), cur3, i => { cur3 = i; pintar3(); });
+  const it = R.items[cur3], n = it.rubrica.length || 1, total = +it.puntos || 0;
+  const por = Math.round(total / n * 100) / 100;
+  const st = iaEstado[cur3];
+  $('bia').classList.toggle('hidden', !R.ia);
+  $('iaest').innerHTML = (st && st.cargando ? '<div class="info"><span class="spin"></span>Qwen está adaptando la rúbrica a la guía (unos segundos)…</div>' : '') +
+    (st && !st.cargando ? `<div class="${st.ok ? 'okbox' : 'warn'}">${esc(st.msg)}</div>` : '') +
+    (it.rubrica_origen === 'ia' ? '<span class="chip ia">✦ Redactada por Qwen · revisar</span>' : '<span class="chip">Texto del sílabo</span>') +
+    `<span class="chip">${it.rubrica.length} indicadores × ${por} pts = ${total} pts</span>`;
+  const orig = it.rubrica_silabo || [];
+  $('trub').innerHTML = '<tr><th>Indicador</th>' + R.niveles.map((nv, k) => `<th>${nv}<span class="pts">${Math.round(por * (k + 1) / 5 * 100) / 100} pts</span></th>`).join('') + '</tr>' +
+    it.rubrica.map((f, r) => `<tr><td class="ind"><textarea ${st && st.cargando ? 'disabled' : ''} data-r="${r}" data-c="ind" aria-label="Indicador ${r + 1}">${esc(f.indicador)}</textarea></td>` +
+      f.niveles.map((t, c) => {
+        const ia = (f.ia || [])[c];
+        const o = orig[r] && orig[r].niveles[c];
+        return `<td class="${ia ? 'iac' : ''}"><textarea ${st && st.cargando ? 'disabled' : ''} data-r="${r}" data-c="${c}" aria-label="${R.niveles[c]}, indicador ${r + 1}">${esc(t)}</textarea>${ia && o ? `<div class="orig">Sílabo: ${esc(o)}</div>` : ''}</td>`;
+      }).join('') + '</tr>').join('');
+  $('trub').querySelectorAll('textarea').forEach(ta => ta.oninput = () => {
+    const f = it.rubrica[+ta.dataset.r];
+    if (ta.dataset.c === 'ind') f.indicador = ta.value; else f.niveles[+ta.dataset.c] = ta.value;
+    sucio = true;
+  });
+}
+$('bia').onclick = () => adaptar(cur3);
+$('bsil').onclick = async () => {
+  if (!confirm('¿Reemplazar la rúbrica de esta guía por la del sílabo? Se pierden tus cambios en esta guía.')) return;
+  try { await generar({[cur3]: {restaurar_rubrica: true}}); } catch (e) { alert(e.message); }
+  pintar3();
+};
+$('atras3').onclick = () => paso(2);
+$('sig3').onclick = async () => {
+  if (iaOcupada()) return;
+  try { await generar(); } catch (e) { alert(e.message); return; }
+  cur4 = cur3; pintar4(); paso(4);
+};
+
+async function generar(extra = {}) {
+  const items = R.items.map(it => Object.assign({i: it.i, nombre: it.nombre, puntos: it.puntos, inicio: it.inicio, fin: it.fin,
+    incluir: it.incluir, modulo: it.modulo, momento: it.momento,
+    rubrica: it.cambio_momento || (extra[it.i] || {}).restaurar_rubrica ? null : it.rubrica.map(f => ({indicador: f.indicador, niveles: f.niveles}))}, extra[it.i] || {}));
+  V = await post('api/guias/generar', {sid: R.sid, grupo_id: R.grupo_id, items});
+  // datos normalizados por el servidor (rúbrica base al cambiar de momento o restaurar, nombres, puntos)
+  const r = await post('api/guias/estado', {sid: R.sid});
+  R.items = r.items; R.secuencia = r.secuencia;
+  sucio = false;
+}
+
+// ---------------- Paso 4 ----------------
+function pintar4() {
+  tabs($('tabs4'), cur4, i => { cur4 = i; pintar4(); });
+  const v = V.items[cur4], it = R.items[cur4];
+  $('frame').srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Lato,"Segoe UI",sans-serif;font-size:15px;color:#2d3b45;padding:16px;line-height:1.5}</style></head><body>' +
+    `<h2 style="font-weight:400;margin-top:0">${esc(v.nombre)}</h2>` + v.descripcion + '</body></html>';
+  $('ctrl').innerHTML = v.controles.map(c => `<li class="${c.ok ? 'ok' : (c.grave ? 'no' : 'av')}">${c.ok ? '✔' : (c.grave ? '✘' : '⚠')} ${esc(c.texto)}</li>`).join('');
+  const g = R.grupos.find(x => x.id === R.grupo_id);
+  $('resumen4').innerHTML = `<b>Tarea:</b> ${esc(v.nombre)}<br><b>Grupo:</b> ${esc(g ? g.nombre : '—')}<br><b>Puntos:</b> ${v.puntos} (${it.rubrica.length} × ${v.por_indicador})<br>` +
+    `<b>Fechas:</b> ${esc(it.inicio)} → ${esc(it.fin)} 23:59<br><b>Estado:</b> sin publicar<br><b>Rúbrica:</b> mismo nombre, asociada para calificar` +
+    (v.incluir ? '' : '<div class="warn"><b>No se creará:</b> está desmarcada en el paso 2.</div>');
+}
+$('atras4').onclick = () => { pintar3(); paso(3); };
+$('sig4').onclick = () => { pintar5(); paso(5); };
+
+// ---------------- Paso 5 ----------------
+const resultados = {};
+function pintar5() {
+  $('sub5').innerHTML = `Esto se creará en <b>${esc(R.curso.url)}</b>:`;
+  const g = R.grupos.find(x => x.id === R.grupo_id);
+  $('tpub').innerHTML = '<tr><th>Guía</th><th>Tarea (grupo ' + esc(g ? g.nombre : '—') + ')</th><th>Rúbrica</th><th>Estado</th></tr>' +
+    V.items.map(v => {
+      const r = resultados[v.i], it = R.items[v.i];
+      let estado = !v.incluir ? '<span class="chip">No se crea</span>'
+        : v.listo ? '<span class="chip ok">Lista</span>'
+        : v.publicable ? '<span class="chip bad">Tiene fallos: se crea igual y los corriges en Canvas (ver paso 4)</span>'
+        : '<span class="chip bad">No se puede crear: ' + esc(v.controles.filter(c => c.bloquea && !c.ok).map(c => c.texto).join('; ')) + '</span>';
+      if (v.creado || (r && r.url_tarea)) estado = '<span class="chip ok">Creada</span>';
+      return `<tr><td>N° ${esc(it.n)} · Momento ${esc(it.momento)}</td><td>${esc(v.nombre)}</td><td>${esc(v.nombre)} · ${v.puntos} pts</td><td>${estado}</td></tr>`;
+    }).join('');
+  listo5();
+}
+function listo5() {
+  const hay = V.items.some(v => v.incluir && v.publicable && !(resultados[v.i] && resultados[v.i].url_tarea) && !v.creado);
+  $('bpub').disabled = !($('conf').checked && hay && !sucio);
+}
+$('conf').onchange = listo5;
+$('atras5').onclick = () => paso(4);
+$('bpub').onclick = async () => {
+  const b = $('bpub'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Creando…'; $('e5').classList.add('hidden');
+  try {
+    const idx = V.items.filter(v => v.incluir && v.publicable && !v.creado).map(v => v.i);
+    const r = await post('api/guias/publicar', {sid: R.sid, indices: idx, confirmado: true});
+    Object.assign(resultados, r.resultados);
+    pintarRes();
+  } catch (e) {
+    $('e5').textContent = e.message; $('e5').classList.remove('hidden');
+    if (/vista previa/i.test(e.message)) {
+      const b2 = document.createElement('button'); b2.className = 'sm'; b2.style.marginLeft = '10px';
+      b2.textContent = 'Generar la vista previa de nuevo';
+      b2.onclick = async () => { try { await generar(); } catch (x) { alert(x.message); return; } $('e5').classList.add('hidden'); cur4 = 0; pintar4(); paso(4); };
+      $('e5').appendChild(b2);
+    }
+  }
+  b.innerHTML = 'Crear en Canvas'; pintar5();
+};
+function pintarRes() {
+  $('res5').innerHTML = Object.entries(resultados).map(([i, r]) => {
+    const it = R.items[+i];
+    return `<div class="resul"><b class="${r.ok ? (r.verificado === false ? 'av' : 'ok') : 'no'}">${r.ok ? '✔' : '✘'} ${esc(it.nombre)}</b> — ${esc(r.mensaje)}
+      ${(r.pendientes || []).length ? '<div class="warn" style="margin-top:8px"><b>Corrige en Canvas:</b> ' + r.pendientes.map(esc).join('; ') + '</div>' : ''}
+      ${(r.chequeos || []).length ? '<ul class="check" style="margin-top:8px">' + r.chequeos.map(c => `<li class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✔' : '✘'} ${esc(c.texto)}</li>`).join('') + '</ul>' : ''}
+      <div style="margin-top:6px">${r.url_tarea ? `<a href="${esc(r.url_tarea)}" target="_blank" rel="noopener">Abrir tarea ↗</a> · ` : ''}${r.url_rubrica ? `<a href="${esc(r.url_rubrica)}" target="_blank" rel="noopener">Abrir rúbrica ↗</a> · ` : ''}
+      ${r.url_tarea ? `<button class="sm" data-undo="${i}">↶ Deshacer</button>` : ''}</div></div>`;
+  }).join('');
+  $('res5').querySelectorAll('[data-undo]').forEach(b => b.onclick = async () => {
+    const i = +b.dataset.undo;
+    if (!confirm(`Se eliminarán de Canvas la tarea y la rúbrica "${R.items[i].nombre}" creadas en esta sesión. Esto no se puede deshacer. ¿Continuar?`)) return;
+    try {
+      const r = await post('api/guias/deshacer', {sid: R.sid, i});
+      resultados[i] = {ok: false, mensaje: r.mensaje};
+      V.items[i].creado = null;
+    } catch (e) { alert(e.message); }
+    pintarRes(); pintar5();
+  });
+}
+$('bfin').onclick = async () => {
+  if (R) await fetch(api('api/terminar/' + encodeURIComponent(R.sid)), {method: 'POST'}).catch(() => {});
+  $('finnota').innerHTML = 'Datos borrados del servidor. Lo creado en Canvas se queda en tu curso. Te recomendamos eliminar el token en Canvas (Cuenta → Configuraciones → Integraciones aprobadas → 🗑).';
+  $('bpub').disabled = true; $('bfin').disabled = true;
+  $('res5').querySelectorAll('[data-undo]').forEach(b => b.disabled = true);
+};
+$('botro').onclick = async () => {
+  if (R && !confirm('Se borran los datos de esta sesión (ya no podrás usar "Deshacer"). ¿Continuar?')) return;
+  if (R) await fetch(api('api/terminar/' + encodeURIComponent(R.sid)), {method: 'POST'}).catch(() => {});
+  location.reload();
+};
+</script>
+<script>fetch(new URL('api/historial/estado', new URL('./', location.href))).then(r => r.json()).then(e => { if (!e.habilitado) document.querySelectorAll('.bhist').forEach(b => b.remove()); }).catch(() => {});</script>
+</body>
+</html>

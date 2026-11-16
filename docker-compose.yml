@@ -10,6 +10,9 @@ services:
     env_file: .env
     environment:
       QDRANT_URL: http://qdrant:6333
+      HISTORIAL_DB: /datos/historial.sqlite   # historial de cargas: sobrevive a reconstruir el contenedor
+    volumes:
+      - historial_data:/datos
     depends_on:
       - qdrant
     restart: unless-stopped
@@ -23,6 +26,7 @@ services:
 
 volumes:
   qdrant_data:
+  historial_data:
 
 # Evita que Docker asigne 172.18.0.0/16, utilizada por la red universitaria.
 networks:

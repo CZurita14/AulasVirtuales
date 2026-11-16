@@ -99,6 +99,9 @@ class Canvas:
     def modulos(self):
         return self._get_todo(f'/courses/{self.curso["id"]}/modules', {'include[]': 'items'})
 
+    def elementos_modulo(self, modulo_id):
+        return self._get_todo(f'/courses/{self.curso["id"]}/modules/{int(modulo_id)}/items')
+
     def buscar_paginas(self, termino):
         return self._get_todo(f'/courses/{self.curso["id"]}/pages', {'search_term': termino})
 
@@ -107,10 +110,71 @@ class Canvas:
 
     # ---------------- escritura (requiere aprobación) ----------------
     def actualizar_cuerpo(self, slug, body, aprobado=False):
-        if aprobado is not True:
-            raise PermissionError('Escritura en Canvas sin aprobación del docente.')
+        _exigir(aprobado)
         return self._req('PUT', f'/courses/{self.curso["id"]}/pages/{slug}',
                          json={'wiki_page': {'body': body}}).json()
+
+    # ---------------- tareas y rúbricas (Guías prácticas) ----------------
+    def grupos_tareas(self):
+        return self._get_todo(f'/courses/{self.curso["id"]}/assignment_groups')
+
+    def tareas(self, termino=None):
+        return self._get_todo(f'/courses/{self.curso["id"]}/assignments',
+                              {'search_term': termino} if termino else None)
+
+    def tarea(self, tid):
+        return self._req('GET', f'/courses/{self.curso["id"]}/assignments/{int(tid)}').json()
+
+    def rubricas(self):
+        return self._get_todo(f'/courses/{self.curso["id"]}/rubrics')
+
+    def rubrica(self, rid):
+        return self._req('GET', f'/courses/{self.curso["id"]}/rubrics/{int(rid)}',
+                         params={'include[]': 'associations'}).json()
+
+    def crear_tarea(self, datos, aprobado=False):
+        _exigir(aprobado)
+        return self._req('POST', f'/courses/{self.curso["id"]}/assignments', json={'assignment': datos}).json()
+
+    def crear_rubrica(self, titulo, criterios, tarea_id, aprobado=False):
+        """`criterios`: [dict(descripcion, puntos, niveles=[dict(descripcion, detalle, puntos)])].
+        Se envía como formulario (rubric[criteria][i][…]), que es la forma documentada por Canvas."""
+        _exigir(aprobado)
+        f = {'rubric[title]': titulo, 'rubric[free_form_criterion_comments]': 'false',
+             'rubric_association[association_id]': str(int(tarea_id)),
+             'rubric_association[association_type]': 'Assignment',
+             'rubric_association[use_for_grading]': 'true', 'rubric_association[purpose]': 'grading'}
+        for i, c in enumerate(criterios):
+            p = f'rubric[criteria][{i}]'
+            f[f'{p}[description]'] = c['descripcion']
+            f[f'{p}[points]'] = _num(c['puntos'])
+            for j, n in enumerate(c['niveles']):
+                f[f'{p}[ratings][{j}][description]'] = n['descripcion']
+                f[f'{p}[ratings][{j}][long_description]'] = n['detalle']
+                f[f'{p}[ratings][{j}][points]'] = _num(n['puntos'])
+        return self._req('POST', f'/courses/{self.curso["id"]}/rubrics', data=f).json()
+
+    def agregar_a_modulo(self, modulo_id, tarea_id, aprobado=False):
+        _exigir(aprobado)
+        return self._req('POST', f'/courses/{self.curso["id"]}/modules/{int(modulo_id)}/items',
+                         json={'module_item': {'type': 'Assignment', 'content_id': int(tarea_id)}}).json()
+
+    def borrar_tarea(self, tid, aprobado=False):
+        _exigir(aprobado)
+        return self._req('DELETE', f'/courses/{self.curso["id"]}/assignments/{int(tid)}').json()
+
+    def borrar_rubrica(self, rid, aprobado=False):
+        _exigir(aprobado)
+        return self._req('DELETE', f'/courses/{self.curso["id"]}/rubrics/{int(rid)}').json()
+
+
+def _exigir(aprobado):
+    if aprobado is not True:
+        raise PermissionError('Escritura en Canvas sin aprobación del docente.')
+
+
+def _num(x):
+    return f'{float(x):g}'
 
 
 # ---------------- localizar las páginas "Momento N" ----------------
@@ -157,7 +221,16 @@ def localizar_momentos(cv, numeros):
                     cand[n].append((s, 'página de inicio'))
 
     for mod in cv.modulos():
-        paginas = [it for it in (mod.get('items') or []) if it.get('type') == 'Page' and it.get('page_url')]
+        items = mod.get('items')
+        cantidad = mod.get('items_count')
+        if mod.get('id') is not None and cantidad != 0 and (
+            items is None or (isinstance(cantidad, int) and len(items) < cantidad)
+        ):
+            try:
+                items = cv.elementos_modulo(mod['id'])
+            except ErrorCanvas as e:
+                avisos.append(f'No se pudieron consultar los elementos del módulo {mod["id"]} ({e}).')
+        paginas = [it for it in (items or []) if it.get('type') == 'Page' and it.get('page_url')]
         for n in numeros:
             por_titulo = [it for it in paginas if es_titulo_momento(it.get('title', ''), n)]
             if por_titulo:

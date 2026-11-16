@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sílabo → Aula virtual</title>
+<style>
+  :root{--m:#3A1467;--m2:#230C3E;--o:#F37121;--bg:#F6F4F9;--line:#E2DCEB;--tx:#2d3748;--mut:#6b6480}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+  header{background:linear-gradient(135deg,var(--m),var(--m2));color:#fff;padding:18px 28px;border-bottom:4px solid var(--o)}
+  header h1{margin:0;font-size:20px;font-weight:600} header small{opacity:.75}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 24px}
+  .wrap > p{color:var(--mut);margin:0 0 18px}
+  .menu{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  a.opt{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;text-decoration:none;color:inherit;transition:.15s}
+  a.opt:hover,a.opt:focus{border-color:var(--m);box-shadow:0 6px 18px rgba(58,20,103,.12);outline:none}
+  .ic{font-size:30px} h2{margin:10px 0 6px;color:var(--m2);font-size:19px}
+  .opt p{margin:0 0 12px;color:var(--mut);font-size:14px;line-height:1.5}
+  ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.7}
+  .go{display:inline-block;margin-top:16px;color:var(--m);font-weight:600;font-size:14px}
+  @media(max-width:760px){.menu{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>Sílabo → Aula virtual</h1><small>Carga tu sílabo y tus guías prácticas en tu curso de Canvas</small></div><a class="bhist" href="historial" title="Ver todo lo que se ha cargado" style="display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:12.5px;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:4px 11px;background:rgba(255,255,255,.08);opacity:1">🕘 Historial</a></header>
+<div class="wrap">
+  <p>¿Qué quieres cargar en tu curso?</p>
+  <div class="menu">
+    <a class="opt" href="silabos">
+      <div class="ic">📘</div>
+      <h2>Sílabos</h2>
+      <p>Carga los <b>Momentos</b> del sílabo en las páginas de tu curso.</p>
+      <ul><li>Sílabo PDF + URL del curso + token</li><li>Rellena las páginas "Momento 1 … 4"</li></ul>
+      <span class="go">Empezar →</span>
+    </a>
+    <a class="opt" href="guias">
+      <div class="ic">🧪</div>
+      <h2>Guías prácticas</h2>
+      <p>Crea las <b>tareas PAE</b> y sus <b>rúbricas</b> a partir de tus guías prácticas y del sílabo.</p>
+      <ul><li>Sílabo PDF + guías prácticas PDF + URL + token</li><li>Rúbrica del momento adaptada a cada guía</li>
+        <li>Tareas → grupo <b>Actividades</b>: <b>PAE#-Nombre de la guía</b></li><li>Rúbricas con el mismo nombre de la PAE</li></ul>
+      <span class="go">Empezar →</span>
+    </a>
+  </div>
+</div>
+<script>fetch(new URL('api/historial/estado', new URL('./', location.href))).then(r => r.json()).then(e => { if (!e.habilitado) document.querySelectorAll('.bhist').forEach(b => b.remove()); }).catch(() => {});</script>
+</body>
+</html>
