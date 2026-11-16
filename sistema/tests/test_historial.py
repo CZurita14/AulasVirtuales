@@ -114,7 +114,7 @@ ROOT = os.path.dirname(SIS)
 PDF_PE = os.path.join(ROOT, 'B26_Software_Programacion Estructurada.pdf')
 GUIA = os.path.join(SIS, 'tests', 'fixtures', 'guia_pe_n3.pdf')
 URL = f'https://indoamerica.instructure.com/courses/{CURSO_MOCK}'
-client = TestClient(appmod.app)
+client = TestClient(appmod.app, client=('127.0.0.1', 50000))   # el propio equipo
 con_pdfs = pytest.mark.skipif(not (os.path.exists(PDF_PE) and os.path.exists(GUIA)), reason='faltan PDF de prueba')
 
 
@@ -291,3 +291,72 @@ def test_sin_clave_y_sin_opcion_local_se_cierra(monkeypatch):
     assert client.get('/api/historial/estado').json() == dict(habilitado=True, requiere_clave=True)
     monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')          # con clave sí funciona aunque no sea local
     assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
+
+
+# ---------------- protecciones extra (dirección pública) ----------------
+@pytest.fixture(autouse=True)
+def _sin_fallos_previos():
+    appmod._FALLOS.clear()
+    yield
+    appmod._FALLOS.clear()
+
+
+def test_sin_clave_solo_abre_desde_el_propio_equipo_por_ip(monkeypatch):
+    """Sin clave, aunque el puente no agregue cabeceras, una visita desde otra IP (p. ej. el contenedor del puente) no entra."""
+    monkeypatch.setattr(appmod, '_ips_locales', lambda: {'127.0.0.1', '::1', '192.168.240.1'})
+    puente = TestClient(appmod.app, client=('192.168.240.4', 40000))
+    assert puente.get('/api/historial').status_code == 403
+    assert puente.get('/api/historial/estado').json()['requiere_clave'] is True
+    equipo = TestClient(appmod.app, client=('192.168.240.1', 40000))   # el propio equipo visto desde Docker
+    assert equipo.get('/api/historial').status_code == 200
+
+
+def test_puerta_de_enlace_se_lee_de_la_tabla_de_rutas(tmp_path, monkeypatch):
+    rutas = tmp_path / 'route'
+    filas = [['Iface', 'Destination', 'Gateway', 'Flags', 'RefCnt', 'Use', 'Metric', 'Mask'],
+             ['eth0', '00000000', '01F0A8C0', '0003', '0', '0', '0', '00000000'],     # ruta por defecto
+             ['eth0', '00F0A8C0', '00000000', '0001', '0', '0', '0', '00FFFFFF']]
+    rutas.write_text(''.join(chr(9).join(f) + chr(10) for f in filas))
+    assert appmod._puerta_de_enlace(str(rutas)) == '192.168.240.1'
+    assert appmod._puerta_de_enlace(str(tmp_path / 'no-existe')) is None
+
+
+def test_limita_intentos_fallidos_de_clave(monkeypatch):
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    h = lambda k: {'X-Historial-Clave': k, 'X-Forwarded-For': '203.0.113.9'}
+    for _ in range(appmod._MAX_FALLOS):
+        assert client.get('/api/historial', headers=h('mala')).status_code == 401
+    r = client.get('/api/historial', headers=h('secreto-123'))
+    assert r.status_code == 429 and 'intentos' in r.json()['detail']     # bloqueado aunque ahora acierte
+    otro = {'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.7'}
+    assert client.get('/api/historial', headers=otro).status_code == 200  # otra persona no queda bloqueada
+
+
+def test_el_limite_usa_la_ip_que_agrega_el_proxy(monkeypatch):
+    """Cambiar la primera IP de X-Forwarded-For (la que inventa el cliente) no salta el límite."""
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    for i in range(appmod._MAX_FALLOS):
+        client.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'10.0.0.{i}, 203.0.113.9'})
+    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '10.9.9.9, 203.0.113.9'})
+    assert r.status_code == 429
+
+
+def test_limite_global_de_fallos(monkeypatch):
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    for i in range(appmod._MAX_FALLOS_TOTAL):
+        client.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.113.{i}'})
+    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.200'})
+    assert r.status_code == 429
+
+
+def test_sin_clave_escrita_no_cuenta_como_fallo(monkeypatch):
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    for _ in range(appmod._MAX_FALLOS + 2):
+        assert client.get('/api/historial').status_code == 401
+    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
+
+
+def test_pagina_permite_olvidar_la_clave():
+    h = client.get('/historial').text
+    assert 'id="bolvidar"' in h and 'Olvidar la clave en este equipo' in h
+

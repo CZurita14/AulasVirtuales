@@ -8,6 +8,8 @@ al navegador. Si se publica en red, debe ir detrás de HTTPS.
 import io
 import os
 import secrets
+import socket
+import struct
 import threading
 import time
 
@@ -374,18 +376,64 @@ def guias_deshacer(d: DeshacerGuia):
 
 # ======================= Historial de cargas =======================
 def _por_proxy(request):
-    """La petición llegó a través de un proxy (nginx del servidor), no desde el propio equipo."""
+    """La petición llegó a través de un proxy (nginx del servidor o el puente), no desde el propio equipo."""
     return bool(request.headers.get('x-forwarded-for') or request.headers.get('x-real-ip'))
 
 
+def _puerta_de_enlace(rutas='/proc/net/route'):
+    """IP de la puerta de enlace por defecto. En Docker es desde donde llegan las visitas del propio equipo
+    (el puerto solo se publica en 127.0.0.1); el contenedor del puente llega con su propia IP."""
+    try:
+        with open(rutas, encoding='ascii') as f:
+            for linea in f.readlines()[1:]:
+                c = linea.split()
+                if len(c) > 3 and c[1] == '00000000' and int(c[3], 16) & 2:
+                    return socket.inet_ntoa(struct.pack('<L', int(c[2], 16)))
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+_IPS_LOCALES = None
+
+
+def _ips_locales():
+    global _IPS_LOCALES
+    if _IPS_LOCALES is None:
+        _IPS_LOCALES = {'127.0.0.1', '::1'} | ({_puerta_de_enlace()} - {None})
+    return _IPS_LOCALES
+
+
 def _abierto_sin_clave(request):
-    """Sin clave solo se abre si se pidió expresamente (HISTORIAL_LOCAL=1, en el propio equipo) y la petición no
-    viene de un proxy. No depende solo de cabeceras: por defecto, sin clave, está cerrado."""
-    return historial.local() and not _por_proxy(request)
+    """Sin clave solo se abre si se pidió expresamente (HISTORIAL_LOCAL=1), la visita viene del propio equipo
+    (por IP, no por cabeceras) y no pasó por un proxy. Por defecto, sin clave, está cerrado."""
+    ip = request.client.host if request.client else ''
+    return historial.local() and ip in _ips_locales() and not _por_proxy(request)
+
+
+# Límite de intentos fallidos de clave (la dirección pública está en internet)
+_MAX_FALLOS, _MAX_FALLOS_TOTAL, _VENTANA = 10, 40, 15 * 60   # varias personas pueden salir por la misma IP
+_FALLOS = {}            # origen -> [instantes de fallos]; '*' = todos
+_fallos_lock = threading.Lock()
+
+
+def _origen(request):
+    """Quién intenta: la IP que agregó el proxy (la última de X-Forwarded-For; las primeras las puede inventar
+    el cliente) o, sin proxy, la IP de la conexión."""
+    xff = request.headers.get('x-forwarded-for', '')
+    if xff.strip():
+        return xff.split(',')[-1].strip()
+    return request.client.host if request.client else ''
+
+
+def _recientes(origen, ahora):
+    v = [t for t in _FALLOS.get(origen, []) if ahora - t < _VENTANA]
+    _FALLOS[origen] = v
+    return v
 
 
 def _acceso_historial(request, x_clave):
-    """Falla cerrado: sin HISTORIAL_CLAVE el historial solo se ve con HISTORIAL_LOCAL=1 y sin proxy.
+    """Falla cerrado: sin HISTORIAL_CLAVE el historial solo se ve con HISTORIAL_LOCAL=1 desde el propio equipo.
     La clave solo viaja en la cabecera X-Historial-Clave (nunca en la URL)."""
     if not historial.habilitado():
         raise HTTPException(404, 'El historial está desactivado.')
@@ -395,7 +443,15 @@ def _acceso_historial(request, x_clave):
             raise HTTPException(403, 'El historial necesita HISTORIAL_CLAVE en el archivo .env '
                                      '(o HISTORIAL_LOCAL=1 si el sistema solo se usa en este equipo).')
         return
+    origen, ahora = _origen(request), time.monotonic()
+    with _fallos_lock:
+        if len(_recientes(origen, ahora)) >= _MAX_FALLOS or len(_recientes('*', ahora)) >= _MAX_FALLOS_TOTAL:
+            raise HTTPException(429, 'Demasiados intentos fallidos de clave. Espera 15 minutos e inténtalo de nuevo.')
     if not secrets.compare_digest((x_clave or '').encode('utf-8'), k.encode('utf-8')):
+        if x_clave:   # sin clave escrita no cuenta como intento
+            with _fallos_lock:
+                _FALLOS.setdefault(origen, []).append(ahora)
+                _FALLOS.setdefault('*', []).append(ahora)
         raise HTTPException(401, 'Falta la clave del historial o no es correcta.')
 
 

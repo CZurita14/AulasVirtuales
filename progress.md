@@ -378,3 +378,20 @@
   el historial.
 - **Clave del equipo creada por el usuario** (en `.env`; no se anota aquí). Verificado por la dirección fija y en local:
   sin clave → 401, clave incorrecta → 401, con la clave → 200. La app en Docker la tiene cargada.
+
+### 2026-11-16 · Segunda subida a GitHub
+- Commit de sincronización `83fbe0d` sobre `origin/main` (avance rápido desde `18b8d4b`, sin forzar) con el árbol de `main`
+  local (`d430604`) sin PDF ni `.claude/`. Revisado antes de subir: 0 PDF, sin `.env`, sin la clave del historial y sin
+  direcciones del puente. README raíz: selección de momentos, clave del equipo y dirección fija opcional.
+
+### 2026-11-16 · Protecciones extra del historial (revisión de seguridad del commit d430604)
+- **Local sin clave solo por IP:** con `HISTORIAL_LOCAL=1` y sin clave, el historial se abre solo si la visita viene del propio
+  equipo **por IP** (127.0.0.1/::1 o la puerta de enlace de Docker, leída de `/proc/net/route`; dentro del contenedor detecta
+  `192.168.240.1`) y sin cabeceras de proxy. El puente llega desde `192.168.240.4`: aunque no agregara cabeceras, no entra.
+- **Límite de intentos:** 10 claves erróneas por origen en 15 min → 429 (aunque luego acierte); 40 en total → 429 para todos.
+  El origen es la IP que agrega el proxy (la última de `X-Forwarded-For`), no la que inventa el cliente. Sin clave escrita no
+  cuenta. Se subió de 5 a 10 porque el equipo puede salir a internet por la misma IP de la universidad.
+- **Botón "🔒 Olvidar la clave en este equipo"** en el Historial (visible solo si hay clave guardada): la borra del navegador y
+  vuelve a pedirla. Para computadoras compartidas.
+- Pruebas: +7 en `test_historial.py` (el cliente de pruebas ahora es 127.0.0.1). Suite: **212 passed**. App reconstruida.
+  Verificado por la dirección fija: sin clave 401, clave mala 401, con clave 200; en local con clave 200.

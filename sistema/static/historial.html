@@ -69,7 +69,7 @@
       <select id="forden" aria-label="Orden"><option value="desc">Más reciente primero</option><option value="asc">Más antiguo primero</option></select>
     </div>
     <div style="overflow-x:auto"><table id="tabla"></table></div>
-    <div class="pie"><span class="mut">Haz clic en una fila para ver el detalle.</span><button class="btn" id="bcsv" type="button">⬇ Exportar CSV</button></div>
+    <div class="pie"><span class="mut">Haz clic en una fila para ver el detalle.</span><span style="display:flex;gap:8px;align-items:center"><button class="btn hidden" id="bolvidar" type="button" title="Para computadoras compartidas: la próxima vez se pedirá la clave">🔒 Olvidar la clave en este equipo</button><button class="btn" id="bcsv" type="button">⬇ Exportar CSV</button></span></div>
   </section>
 </div>
 <script>
@@ -82,6 +82,7 @@ const RES_SEL = {ok: '✔ Publicado / creado / correcto', error: '✘ No se publ
 let clave = '', abierta = null, editando = null, eventos = [];
 // la clave del equipo se recuerda en este navegador (se pide una sola vez); si deja de valer, se olvida y se vuelve a pedir
 try { clave = localStorage.getItem('historial_clave') || ''; } catch (e) {}
+const botonOlvidar = () => $('bolvidar').classList.toggle('hidden', !clave);
 
 function fecha(f) {
   const m = /^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d:\d\d))?/.exec(f || '');
@@ -91,7 +92,7 @@ async function pedir(url, opts = {}) {
   opts.headers = Object.assign({'X-Historial-Clave': clave}, opts.headers || {});
   const r = await fetch(api(url), opts);
   let j = {}; try { j = await r.json(); } catch (e) {}
-  if (r.status === 401) { clave = ''; try { localStorage.removeItem('historial_clave'); } catch (e) {} $('clavebox').classList.remove('hidden'); throw new Error(j.detail || 'Falta la clave del historial.'); }
+  if (r.status === 401) { clave = ''; try { localStorage.removeItem('historial_clave'); } catch (e) {} botonOlvidar(); $('clavebox').classList.remove('hidden'); throw new Error(j.detail || 'Falta la clave del historial.'); }
   if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'Error ' + r.status);
   return j;
 }
@@ -181,7 +182,13 @@ $('bcsv').onclick = async () => {   // la clave va en la cabecera, nunca en la U
 let espera;
 ['ftipo', 'fcurso', 'forden'].forEach(id => $(id).onchange = cargar);
 $('fq').oninput = () => { clearTimeout(espera); espera = setTimeout(cargar, 300); };
-$('bclave').onclick = () => { clave = $('clave').value; try { localStorage.setItem('historial_clave', clave); } catch (e) {} $('clavebox').classList.add('hidden'); cargar(); };
+$('bclave').onclick = () => { clave = $('clave').value; try { localStorage.setItem('historial_clave', clave); } catch (e) {} botonOlvidar(); $('clavebox').classList.add('hidden'); cargar(); };
+$('bolvidar').onclick = () => {
+  clave = ''; try { localStorage.removeItem('historial_clave'); } catch (e) {}
+  eventos = []; $('tabla').innerHTML = ''; $('kpis').innerHTML = ''; $('clave').value = '';
+  botonOlvidar(); $('clavebox').classList.remove('hidden');
+};
+botonOlvidar();
 (async () => {
   try {
     const est = await (await fetch(api('api/historial/estado'))).json();
