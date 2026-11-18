@@ -6,12 +6,14 @@ El token del docente solo vive en memoria durante la sesión: no se guarda, no s
 al navegador. Si se publica en red, debe ir detrás de HTTPS.
 """
 import io
+import ipaddress
 import os
 import secrets
 import socket
 import struct
 import threading
 import time
+from collections import OrderedDict
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -412,10 +414,26 @@ def _abierto_sin_clave(request):
 
 
 # Límite de intentos fallidos de clave (la dirección pública está en internet). Solo por origen: un límite
-# global permitiría a cualquiera dejar sin historial a todo el equipo a base de fallos.
+# global permitiría a cualquiera dejar sin historial a todo el equipo a base de fallos. Contra intentos repartidos
+# entre muchas IP protege la longitud mínima de la clave (CLAVE_MINIMA).
 _MAX_FALLOS, _VENTANA = 10, 15 * 60   # 10 y no menos: varias personas pueden salir por la misma IP
-_FALLOS = {}            # origen -> [instantes de fallos recientes]
+_MAX_ORIGENES = 10000                 # tope de la tabla: al llenarse se descarta el origen más antiguo
+CLAVE_MINIMA = 12
+_FALLOS = OrderedDict()               # origen -> [instantes de fallos recientes], del más antiguo al más reciente
 _fallos_lock = threading.Lock()
+
+
+def _red(ip):
+    """IPv6 se agrupa por red /64 (un mismo cliente suele tener todo el bloque); IPv4 queda igual."""
+    try:
+        d = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if d.version == 4:
+        return str(d)
+    if d.ipv4_mapped:
+        return str(d.ipv4_mapped)
+    return str(ipaddress.ip_network(f'{d}/64', strict=False))
 
 
 def _origen(request):
@@ -424,17 +442,23 @@ def _origen(request):
     ip = request.client.host if request.client else ''
     xff = request.headers.get('x-forwarded-for', '')
     if ip not in _ips_locales() and xff.strip():
-        return xff.split(',')[-1].strip()
-    return ip
+        ip = xff.split(',')[-1].strip()
+    return _red(ip)
 
 
 def _recientes(origen, ahora):
-    v = [t for t in _FALLOS.get(origen, []) if ahora - t < _VENTANA]
-    if v:
-        _FALLOS[origen] = v
-    else:
+    v = [t for t in _FALLOS.get(origen, ()) if ahora - t < _VENTANA]
+    if not v:
         _FALLOS.pop(origen, None)
     return v
+
+
+def _anotar_fallo(origen, ahora):
+    v = _recientes(origen, ahora) + [ahora]
+    _FALLOS.pop(origen, None)
+    _FALLOS[origen] = v                         # al final: es el más reciente
+    while len(_FALLOS) > _MAX_ORIGENES:
+        _FALLOS.popitem(last=False)             # O(1): fuera el más antiguo
 
 
 def _acceso_historial(request, x_clave):
@@ -448,18 +472,17 @@ def _acceso_historial(request, x_clave):
             raise HTTPException(403, 'El historial necesita HISTORIAL_CLAVE en el archivo .env '
                                      '(o HISTORIAL_LOCAL=1 si el sistema solo se usa en este equipo).')
         return
+    if len(k) < CLAVE_MINIMA:
+        raise HTTPException(403, f'HISTORIAL_CLAVE es demasiado corta: usa al menos {CLAVE_MINIMA} caracteres.')
     origen, ahora = _origen(request), time.monotonic()
     # revisar, comparar y anotar en un solo paso: intentos simultáneos no pueden colarse antes de contarse
     with _fallos_lock:
-        if len(_FALLOS) > 5000:   # no acumular orígenes viejos
-            for o in list(_FALLOS):
-                _recientes(o, ahora)
         if len(_recientes(origen, ahora)) >= _MAX_FALLOS:
             raise HTTPException(429, 'Demasiados intentos fallidos de clave. Espera 15 minutos e inténtalo de nuevo.')
         if secrets.compare_digest((x_clave or '').encode('utf-8'), k.encode('utf-8')):
             return
         if x_clave:   # sin clave escrita no cuenta como intento
-            _FALLOS.setdefault(origen, []).append(ahora)
+            _anotar_fallo(origen, ahora)
     raise HTTPException(401, 'Falta la clave del historial o no es correcta.')
 
 

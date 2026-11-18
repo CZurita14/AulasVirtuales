@@ -405,3 +405,15 @@
   directa no puede repartir sus fallos inventando cabeceras. Los orígenes sin fallos recientes se descartan (no crece sin fin).
 - Pruebas: +2 netas (sin bloqueo global, XFF solo del proxy, 40 intentos simultáneos → exactamente 10 cuentan). Suite:
   **214 passed**. App reconstruida; por la dirección fija: sin clave 401, mala 401, con clave 200; local con clave 200.
+- Subido a GitHub: commit de sincronización `8e0dec1` sobre `90e8611` (avance rápido, sin forzar; 0 PDF, sin `.env` ni la clave).
+
+### 2026-11-16 · Límite de intentos: tabla acotada, IPv6 por red y clave mínima (revisión del commit f783849)
+- **Tabla de fallos con tope:** `OrderedDict` de hasta 10 000 orígenes; al llenarse se descarta el más antiguo en O(1). Ya no
+  se recorre toda la tabla bajo el candado.
+- **IPv6 agrupado por /64:** cambiar la parte final de la dirección no salta el límite.
+- **Clave mínima de 12 caracteres:** con una `HISTORIAL_CLAVE` más corta el historial responde 403 explicando el motivo. Es la
+  defensa contra intentos repartidos entre muchas IP. La clave actual cumple (verificado sin mostrarla).
+- **Decisión:** no se vuelve a poner un límite global. Bloquear a todos permitiría a un extraño dejar sin historial al equipo;
+  frenarlo con esperas ocuparía los hilos del servidor. Queda el límite por origen + la longitud de la clave.
+- Pruebas: +3 (claves de prueba ahora de 12 caracteres). Suite: **217 passed**. App reconstruida; dirección fija: sin clave
+  401, mala 401, con clave 200; local con clave 200.

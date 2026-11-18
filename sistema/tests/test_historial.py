@@ -221,13 +221,13 @@ def test_csv():
 
 
 def test_clave_requerida(monkeypatch):
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     assert client.get('/api/historial/estado').json() == dict(habilitado=True, requiere_clave=True)
     assert client.get('/api/historial').status_code == 401
     assert client.get('/api/historial', headers={'X-Historial-Clave': 'otra'}).status_code == 401
-    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
-    assert client.get('/api/historial.csv', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
-    assert client.get('/api/historial', params={'clave': 'secreto-123'}).status_code == 401   # nunca en la URL
+    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234'}).status_code == 200
+    assert client.get('/api/historial.csv', headers={'X-Historial-Clave': 'secreto-1234'}).status_code == 200
+    assert client.get('/api/historial', params={'clave': 'secreto-1234'}).status_code == 401   # nunca en la URL
     assert client.post('/api/historial/1/corregir', json=dict(resultado='ok', nota='')).status_code == 401
 
 
@@ -267,8 +267,8 @@ def test_detras_de_un_proxy_sin_clave_se_cierra():
 
 
 def test_detras_de_un_proxy_con_clave_funciona(monkeypatch):
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
-    h = {'X-Forwarded-For': '10.1.2.3', 'X-Historial-Clave': 'secreto-123'}
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
+    h = {'X-Forwarded-For': '10.1.2.3', 'X-Historial-Clave': 'secreto-1234'}
     assert client.get('/api/historial', headers=h).status_code == 200
 
 
@@ -289,8 +289,8 @@ def test_sin_clave_y_sin_opcion_local_se_cierra(monkeypatch):
     assert client.get('/api/historial.csv').status_code == 403
     assert client.post('/api/historial/1/corregir', json=dict(resultado='ok', nota='')).status_code == 403
     assert client.get('/api/historial/estado').json() == dict(habilitado=True, requiere_clave=True)
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')          # con clave sí funciona aunque no sea local
-    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')          # con clave sí funciona aunque no sea local
+    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234'}).status_code == 200
 
 
 # ---------------- protecciones extra (dirección pública) ----------------
@@ -325,46 +325,46 @@ puente = TestClient(appmod.app, client=('192.168.240.4', 40000))   # el contened
 
 
 def test_limita_intentos_fallidos_de_clave(monkeypatch):
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     h = lambda k: {'X-Historial-Clave': k, 'X-Forwarded-For': '203.0.113.9'}
     for _ in range(appmod._MAX_FALLOS):
         assert puente.get('/api/historial', headers=h('mala')).status_code == 401
-    r = puente.get('/api/historial', headers=h('secreto-123'))
+    r = puente.get('/api/historial', headers=h('secreto-1234'))
     assert r.status_code == 429 and 'intentos' in r.json()['detail']     # bloqueado aunque ahora acierte
-    otro = {'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.7'}
+    otro = {'X-Historial-Clave': 'secreto-1234', 'X-Forwarded-For': '198.51.100.7'}
     assert puente.get('/api/historial', headers=otro).status_code == 200  # otra persona no queda bloqueada
 
 
 def test_el_limite_usa_la_ip_que_agrega_el_proxy(monkeypatch):
     """Cambiar la primera IP de X-Forwarded-For (la que inventa el cliente) no salta el límite."""
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     for i in range(appmod._MAX_FALLOS):
         puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'10.0.0.{i}, 203.0.113.9'})
-    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '10.9.9.9, 203.0.113.9'})
+    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234', 'X-Forwarded-For': '10.9.9.9, 203.0.113.9'})
     assert r.status_code == 429
 
 
 def test_fallos_de_muchos_origenes_no_bloquean_al_equipo(monkeypatch):
     """Sin bloqueo global: alguien de fuera no puede dejar sin historial a todo el equipo a base de fallos."""
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     for i in range(200):
         puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.{i // 250}.{i % 250}'})
-    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.200'})
+    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234', 'X-Forwarded-For': '198.51.100.200'})
     assert r.status_code == 200
 
 
 def test_x_forwarded_for_solo_cuenta_si_viene_del_proxy(monkeypatch):
     """Una visita directa (no del puente) no puede repartir sus fallos inventando X-Forwarded-For."""
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     for i in range(appmod._MAX_FALLOS):
         client.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.113.{i}'})
-    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123', 'X-Forwarded-For': '198.51.100.9'})
+    r = client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234', 'X-Forwarded-For': '198.51.100.9'})
     assert r.status_code == 429
 
 
 def test_intentos_simultaneos_no_saltan_el_limite(monkeypatch):
     from concurrent.futures import ThreadPoolExecutor
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     h = {'X-Historial-Clave': 'mala', 'X-Forwarded-For': '203.0.113.50'}
     with ThreadPoolExecutor(8) as ex:
         codigos = list(ex.map(lambda _: puente.get('/api/historial', headers=h).status_code, range(40)))
@@ -372,13 +372,37 @@ def test_intentos_simultaneos_no_saltan_el_limite(monkeypatch):
 
 
 def test_sin_clave_escrita_no_cuenta_como_fallo(monkeypatch):
-    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-123')
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
     for _ in range(appmod._MAX_FALLOS + 2):
         assert client.get('/api/historial').status_code == 401
-    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-123'}).status_code == 200
+    assert client.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234'}).status_code == 200
 
 
 def test_pagina_permite_olvidar_la_clave():
     h = client.get('/historial').text
     assert 'id="bolvidar"' in h and 'Olvidar la clave en este equipo' in h
+
+
+def test_tabla_de_fallos_tiene_tope(monkeypatch):
+    """Muchos orígenes distintos no hacen crecer la memoria sin fin: se descartan los más antiguos."""
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
+    monkeypatch.setattr(appmod, '_MAX_ORIGENES', 50)
+    for i in range(200):
+        puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'203.0.113.{i}'})
+    assert len(appmod._FALLOS) <= 50
+
+
+def test_ipv6_se_agrupa_por_red(monkeypatch):
+    """Cambiar la parte final de una dirección IPv6 (la misma red /64) no salta el límite."""
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'secreto-1234')
+    for i in range(appmod._MAX_FALLOS):
+        puente.get('/api/historial', headers={'X-Historial-Clave': 'mala', 'X-Forwarded-For': f'2001:db8:1:2::{i + 1:x}'})
+    r = puente.get('/api/historial', headers={'X-Historial-Clave': 'secreto-1234', 'X-Forwarded-For': '2001:db8:1:2::ff'})
+    assert r.status_code == 429
+
+
+def test_clave_demasiado_corta_no_se_acepta(monkeypatch):
+    monkeypatch.setenv('HISTORIAL_CLAVE', 'corta')
+    r = client.get('/api/historial', headers={'X-Historial-Clave': 'corta'})
+    assert r.status_code == 403 and 'al menos 12' in r.json()['detail']
 
