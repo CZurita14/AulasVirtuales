@@ -98,8 +98,9 @@ def generar(sesion, propositos=None, complementaria=None, urls=None):
     sesion['paginas'], sesion['control'] = paginas, control
     sesion['version_generada'] = version
     # La lista de control informa: el docente decide publicar tras revisar los avisos.
-    # Una página sin generar o una vista previa desactualizada siguen sin ser publicables.
-    sesion['listo'] = (bool(paginas) and all(h.strip() for h in paginas.values())
+    # Un momento que no se pudo generar no bloquea a los demás: solo ese queda fuera de la publicación.
+    # Una vista previa desactualizada sigue sin ser publicable.
+    sesion['listo'] = (any(h.strip() for h in paginas.values())
                        and version == sesion.get('version_datos', 0))
     return sesion
 
@@ -128,7 +129,7 @@ def publicar(sesion, numeros, confirmado=False):
     if sesion.get('version_generada', 0) != sesion.get('version_datos', 0):
         raise ErrorEntrada('La IA completó datos después de tu vista previa: genera la vista previa de nuevo antes de publicar.')
     if not sesion.get('listo'):
-        raise ErrorEntrada('Falta generar una vista previa completa antes de publicar.')
+        raise ErrorEntrada('Falta generar la vista previa (ningún momento tiene contenido) antes de publicar.')
     numeros = sorted({int(n) for n in numeros})   # el docente elige cuáles; sin repetir
     if not numeros:
         raise ErrorEntrada('Elige al menos un momento para publicar.')
@@ -142,6 +143,10 @@ def publicar(sesion, numeros, confirmado=False):
         html = sesion['paginas'].get(n, '')
         if not dest:
             res[n] = dict(ok=False, mensaje='No se encontró la página de este momento en el curso.')
+            continue
+        if not html.strip():
+            res[n] = dict(ok=False, mensaje='No se pudo generar el contenido de este momento: no se publicó.',
+                          url=dest['url'])
             continue
         # el contenido debe corresponder a la página destino
         if f'Momento {n}:' not in _norm_txt(html) or not canvas.es_titulo_momento(dest['titulo'], n) and \

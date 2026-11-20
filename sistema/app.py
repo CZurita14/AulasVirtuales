@@ -203,7 +203,7 @@ def restaurar(r: Restauracion):
 def descargar(sid: str):
     s = _sesion(sid)
     if not s.get('listo'):
-        raise HTTPException(409, 'Falta generar una vista previa completa y actualizada antes de descargar.')
+        raise HTTPException(409, 'Falta generar una vista previa actualizada antes de descargar.')
     carpeta, data = paquete.zip_bytes(s)
     return StreamingResponse(io.BytesIO(data), media_type='application/zip',
                              headers={'Content-Disposition': f'attachment; filename="{carpeta}.zip"'})

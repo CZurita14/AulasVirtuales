@@ -218,6 +218,27 @@ def test_html_no_generado_sigue_sin_publicarse(mock, monkeypatch):
     assert publicar(j['sid']).status_code == 409 and mock.puts == []
 
 
+def test_momento_no_generado_no_bloquea_a_los_demas(mock, monkeypatch):
+    j = analizar().json()
+    original = render.render
+
+    def falla_el_2(sil, n, *a, **k):
+        if n == 2:
+            raise ValueError('No se pudo generar la página')
+        return original(sil, n, *a, **k)
+
+    monkeypatch.setattr(render, 'render', falla_el_2)
+    g = generar(j['sid'])
+    assert g['listo'] is True and g['paginas']['2'] == ''
+    p = publicar(j['sid'])
+    assert p.status_code == 200
+    r = p.json()['resultados']
+    assert r['2']['ok'] is False and 'No se pudo generar' in r['2']['mensaje']
+    assert all(r[k]['ok'] for k in ('1', '3', '4'))
+    assert len(mock.puts) == 3 and not any('momento-2' in str(x) for x in mock.puts)
+    assert client.get(f'/api/descargar/{j["sid"]}').status_code == 200
+
+
 def test_error_de_canvas_en_una_pagina_no_detiene_las_demas(mock):
     mock.fallar_put.add('momento-3')
     j = analizar().json(); generar(j['sid'])
